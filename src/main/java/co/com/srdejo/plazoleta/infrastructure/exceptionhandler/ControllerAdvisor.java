@@ -2,6 +2,7 @@ package co.com.srdejo.plazoleta.infrastructure.exceptionhandler;
 
 import co.com.srdejo.plazoleta.domain.exception.ErrorCodesEnum;
 import co.com.srdejo.plazoleta.domain.exception.InvalidOwnerException;
+import co.com.srdejo.plazoleta.domain.exception.UnauthorizedException;
 import co.com.srdejo.plazoleta.infrastructure.exception.NoDataFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -52,6 +53,16 @@ public class ControllerAdvisor {
         body.put(MESSAGE, message);
         body.put(TIMESTAMP, Instant.now());
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(body);
+    }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<Map<String, Object>> handleForbidden(UnauthorizedException exception) {
+
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put(CODE, exception.getError().getCode());
+        body.put(MESSAGE, exception.getError().getDescription());
+        body.put(TIMESTAMP, Instant.now());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
     }
 
 }

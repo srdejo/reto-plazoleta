@@ -5,16 +5,19 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
+
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class RestaurantModel {
+public class DishModel {
     private Long id;
     private String name;
-    private String address;
-    private Long ownerId;
-    private String phoneNumber;
-    private String urlLogo;
-    private String taxId;
+    private BigDecimal price;
+    private Long dishCategoryId;
+    private Long restaurantId;
+    private String description;
+    private String urlImage;
+    private Boolean active;
 }

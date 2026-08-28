@@ -10,35 +10,23 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "restaurants")
+@Table(name = "dish_categories")
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
-public class RestaurantEntity {
+public class DishCategoryEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
-    @Column(name = "restaurant_id", nullable = false)
+    @Column(name = "dish_category_id", nullable = false)
     private Long id;
 
     @Column(length = 50)
     private String name;
 
-    @Column(length = 100)
-    private String address;
+    @Column(length = 200)
+    private String description;
 
-    @Column(length = 50)
-    private long ownerId;
-
-    @Column(length = 50)
-    private String phoneNumber;
-
-    @Column(length = 50)
-    private String urlLogo;
-
-    @Column(length = 50)
-    private String taxId;
-
-    @OneToMany(mappedBy = "restaurant")
+    @OneToMany(mappedBy = "dishCategory")
     private List<DishEntity> dishes = new ArrayList<>();
 }

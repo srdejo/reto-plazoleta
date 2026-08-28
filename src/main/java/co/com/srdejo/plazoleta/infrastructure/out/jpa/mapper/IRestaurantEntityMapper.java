@@ -13,7 +13,7 @@ import java.util.List;
 )
 public interface IRestaurantEntityMapper {
 
-    RestaurantEntity toEntity(RestaurantModel restauranttModel);
+    RestaurantEntity toEntity(RestaurantModel restaurantModel);
     RestaurantModel toRestaurantModel(RestaurantEntity restaurantEntity);
     List<RestaurantModel> toRestaurantModelList(List<RestaurantEntity> userEntityList);
 }

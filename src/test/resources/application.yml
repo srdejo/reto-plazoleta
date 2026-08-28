@@ -1,0 +1,21 @@
+server:
+  port: 0
+
+spring:
+  datasource:
+    url: jdbc:h2:mem:plazoleta;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: sa
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+
+feign-url:
+  users: http://localhost:8081/api/v1
+  owners: ${feign-url.users}/owners
+
+appDescription: "Plazoleta api"
+appVersion: "1.0.0"

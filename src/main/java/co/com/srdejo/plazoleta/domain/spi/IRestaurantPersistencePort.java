@@ -8,4 +8,6 @@ public interface IRestaurantPersistencePort {
     RestaurantModel saveRestaurant(RestaurantModel restaurantModel);
 
     List<RestaurantModel> getAllRestaurants();
+
+    RestaurantModel getRestaurant(Long restaurantId);
 }

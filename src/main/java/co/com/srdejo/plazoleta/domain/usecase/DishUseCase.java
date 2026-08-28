@@ -26,7 +26,25 @@ public class DishUseCase implements IDishServicePort {
 
     @Override
     public void saveDish(DishModel dishModel, Long ownerId) {
+        validateOwner(ownerId, dishModel);
+        dishModel.setActive(true);
+        dishPersistencePort.saveDish(dishModel);
+    }
 
+    @Override
+    public List<DishModel> getAllDishes() {
+        return dishPersistencePort.getAllDishes();
+    }
+
+    @Override
+    public DishModel patchDish(DishModel dishModel, Long ownerId) {
+        DishModel existingDish = dishPersistencePort.findById(dishModel.getId());
+        validateOwner(ownerId, existingDish);
+        existingDish.patch(dishModel.getPrice(), dishModel.getDescription());
+        return dishPersistencePort.saveDish(existingDish);
+    }
+
+    private void validateOwner(Long ownerId, DishModel dishModel) {
         if (!ownerClientPort.existsOwner(ownerId)){
             throw new InvalidOwnerException(ErrorCodesEnum.INVALID_OWNER_ID);
         }
@@ -35,13 +53,5 @@ public class DishUseCase implements IDishServicePort {
         if(!restaurantModel.getOwnerId().equals(ownerId)) {
             throw new UnauthorizedException(ErrorCodesEnum.OWNER_NOT_AUTHORIZED);
         }
-
-        dishModel.setActive(true);
-        dishPersistencePort.saveDish(dishModel);
-    }
-
-    @Override
-    public List<DishModel> getAllDishes() {
-        return dishPersistencePort.getAllDishes();
     }
 }

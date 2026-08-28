@@ -9,4 +9,6 @@ public interface IDishServicePort {
     void saveDish(DishModel objectModel, Long ownerId);
 
     List<DishModel> getAllDishes();
+
+    DishModel patchDish(DishModel request, Long ownerId);
 }

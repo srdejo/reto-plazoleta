@@ -18,9 +18,9 @@ public class DishJpaAdapter implements IDishPersistencePort {
 
 
     @Override
-    public void saveDish(DishModel restaurantModel) {
+    public DishModel saveDish(DishModel restaurantModel) {
         DishEntity restaurantEntity = restaurantRepository.save(restaurantEntityMapper.toEntity(restaurantModel));
-        restaurantEntityMapper.toDishModel(restaurantEntity);
+        return restaurantEntityMapper.toDishModel(restaurantEntity);
     }
 
     @Override
@@ -30,5 +30,12 @@ public class DishJpaAdapter implements IDishPersistencePort {
             throw new NoDataFoundException();
         }
         return restaurantEntityMapper.toDishModelList(entityList);
+    }
+
+    @Override
+    public DishModel findById(Long id) {
+        DishEntity dishEntity = restaurantRepository.findById(id)
+                .orElseThrow(NoDataFoundException::new);
+        return restaurantEntityMapper.toDishModel(dishEntity);
     }
 }

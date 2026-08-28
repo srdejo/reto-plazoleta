@@ -1,5 +1,6 @@
 package co.com.srdejo.plazoleta.application.handler.impl;
 
+import co.com.srdejo.plazoleta.application.dto.request.DishPatchRequestDto;
 import co.com.srdejo.plazoleta.application.dto.request.DishRequestDto;
 import co.com.srdejo.plazoleta.application.dto.response.DishResponseDto;
 import co.com.srdejo.plazoleta.application.handler.IDishHandler;
@@ -31,5 +32,13 @@ public class DishHandler implements IDishHandler {
     @Override
     public List<DishResponseDto> getAllDishes() {
         return dishResponseMapper.toResponseList(dishServicePort.getAllDishes());
+    }
+
+    @Override
+    public DishResponseDto patchDish(Long id, DishPatchRequestDto request) {
+        DishModel dishModel = new DishModel();
+        dishModel.setId(id);
+        dishRequestMapper.patch(id, request,  dishModel);
+        return dishResponseMapper.toResponse(dishServicePort.patchDish(dishModel,request.getOwnerId()));
     }
 }

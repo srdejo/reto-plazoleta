@@ -103,4 +103,63 @@ class DishUseCaseTest {
 
         verifyNoInteractions(dishPersistencePort);
     }
+
+    @Test
+    void patchDish_ownerIsRestaurantOwner_updatesPriceAndDescription() {
+        DishModel existingDish = new DishModel(5L, "Hamburguesa Mixta", new BigDecimal(15000), 1L, RESTAURANT_ID,
+                "Hamburguesa con carne y pollo", "http://image.png", true);
+        DishModel patchRequest = new DishModel(5L, null, new BigDecimal(18000), null, RESTAURANT_ID,
+                "Hamburguesa con carne, pollo y tocineta", null, null);
+
+        when(dishPersistencePort.findById(5L)).thenReturn(existingDish);
+        when(ownerClientPort.existsOwner(OWNER_ID)).thenReturn(true);
+        when(restaurantPersistencePort.getRestaurant(RESTAURANT_ID)).thenReturn(restaurantModel(OWNER_ID));
+        when(dishPersistencePort.saveDish(existingDish)).thenReturn(existingDish);
+
+        DishModel result = dishUseCase.patchDish(patchRequest, OWNER_ID);
+
+        assertThat(result.getPrice()).isEqualByComparingTo(new BigDecimal(18000));
+        assertThat(result.getDescription()).isEqualTo("Hamburguesa con carne, pollo y tocineta");
+        verify(dishPersistencePort).saveDish(existingDish);
+    }
+
+    @Test
+    void patchDish_ownerNotAuthorizedForDishRestaurant_throwsUnauthorizedException() {
+        Long otherRestaurantId = 2L;
+        DishModel existingDish = new DishModel(5L, "Hamburguesa Mixta", new BigDecimal(15000), 1L, RESTAURANT_ID,
+                "Hamburguesa con carne y pollo", "http://image.png", true);
+        DishModel patchRequest = new DishModel(5L, null, new BigDecimal(18000), null, otherRestaurantId,
+                "Nueva descripcion", null, null);
+
+        when(dishPersistencePort.findById(5L)).thenReturn(existingDish);
+        when(ownerClientPort.existsOwner(OWNER_ID)).thenReturn(true);
+        when(restaurantPersistencePort.getRestaurant(RESTAURANT_ID)).thenReturn(restaurantModel(999L));
+
+        assertThatThrownBy(() -> dishUseCase.patchDish(patchRequest, OWNER_ID))
+                .isInstanceOf(UnauthorizedException.class)
+                .satisfies(ex -> assertThat(((UnauthorizedException) ex).getError())
+                        .isEqualTo(ErrorCodesEnum.OWNER_NOT_AUTHORIZED));
+
+        verify(restaurantPersistencePort).getRestaurant(RESTAURANT_ID);
+        verify(dishPersistencePort, never()).saveDish(any());
+    }
+
+    @Test
+    void patchDish_ownerDoesNotExist_throwsInvalidOwnerExceptionAndDoesNotPersist() {
+        DishModel existingDish = new DishModel(5L, "Hamburguesa Mixta", new BigDecimal(15000), 1L, RESTAURANT_ID,
+                "Hamburguesa con carne y pollo", "http://image.png", true);
+        DishModel patchRequest = new DishModel(5L, null, new BigDecimal(18000), null, RESTAURANT_ID,
+                "Nueva descripcion", null, null);
+
+        when(dishPersistencePort.findById(5L)).thenReturn(existingDish);
+        when(ownerClientPort.existsOwner(OWNER_ID)).thenReturn(false);
+
+        assertThatThrownBy(() -> dishUseCase.patchDish(patchRequest, OWNER_ID))
+                .isInstanceOf(InvalidOwnerException.class)
+                .satisfies(ex -> assertThat(((InvalidOwnerException) ex).getError())
+                        .isEqualTo(ErrorCodesEnum.INVALID_OWNER_ID));
+
+        verifyNoInteractions(restaurantPersistencePort);
+        verify(dishPersistencePort, never()).saveDish(any());
+    }
 }

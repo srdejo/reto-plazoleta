@@ -46,12 +46,12 @@ class RestaurantEndToEndIT {
                 }
                 """;
 
-        mockMvc.perform(post("/api/v1/restaurant/")
+        mockMvc.perform(post("/api/v1/restaurants/")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(get("/api/v1/restaurant/"))
+        mockMvc.perform(get("/api/v1/restaurants/"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].name").value("Pizzeria La Bella"))
                 .andExpect(jsonPath("$[0].ownerId").value(10));

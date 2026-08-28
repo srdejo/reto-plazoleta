@@ -20,4 +20,9 @@ public class DishModel {
     private String description;
     private String urlImage;
     private Boolean active;
+
+    public void patch( BigDecimal price, String description) {
+        this.price = price;
+        this.description = description;
+    }
 }

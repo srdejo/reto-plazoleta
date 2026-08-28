@@ -5,7 +5,9 @@ import co.com.srdejo.plazoleta.domain.model.DishModel;
 import java.util.List;
 
 public interface IDishPersistencePort {
-    void saveDish(DishModel restaurantModel);
+    DishModel saveDish(DishModel restaurantModel);
 
     List<DishModel> getAllDishes();
+
+    DishModel findById(Long id);
 }

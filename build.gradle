@@ -37,6 +37,7 @@ ext {
 	h2Version = "2.4.240"
 	postgresqlVersion = "42.7.13"
 	openfeignVersion = "5.0.3"
+	ioJWTVersion = "0.13.0"
 }
 
 dependencies {
@@ -44,17 +45,22 @@ dependencies {
 	implementation "org.springframework.boot:spring-boot-starter-web:${springBootVersion}"
 	implementation "org.springframework.boot:spring-boot-starter-validation:${springBootVersion}"
 	implementation "org.springframework.security:spring-security-crypto:${springSecurityCrypto}"
+	implementation "org.springframework.boot:spring-boot-starter-security:${springBootVersion}"
 	implementation "org.mapstruct:mapstruct:${mapstructVersion}"
 	implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${openApiVersion}"
 	implementation "org.springframework.cloud:spring-cloud-starter-openfeign:${openfeignVersion}"
+	implementation "io.jsonwebtoken:jjwt-api:${ioJWTVersion}"
 
 	developmentOnly "org.springframework.boot:spring-boot-devtools:${springBootVersion}"
 	testImplementation "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
 	testImplementation "org.springframework.boot:spring-boot-webmvc-test:${springBootVersion}"
 	testImplementation "org.springframework.boot:spring-boot-data-jpa-test:${springBootVersion}"
+	testImplementation "org.springframework.security:spring-security-test"
 	testRuntimeOnly "com.h2database:h2:${h2Version}"
 
 	runtimeOnly "org.postgresql:postgresql:${postgresqlVersion}"
+	runtimeOnly "io.jsonwebtoken:jjwt-impl:${ioJWTVersion}"
+	runtimeOnly "io.jsonwebtoken:jjwt-jackson:${ioJWTVersion}"
 
 	compileOnly "org.projectlombok:lombok:${lombokVersion}"
 	annotationProcessor "org.projectlombok:lombok-mapstruct-binding:${lombokMapstructBindingVersion}"

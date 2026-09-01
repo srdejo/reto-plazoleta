@@ -1,12 +1,15 @@
 package co.com.srdejo.plazoleta.infrastructure.exceptionhandler;
 
 import co.com.srdejo.plazoleta.domain.exception.ErrorCodesEnum;
+import co.com.srdejo.plazoleta.domain.exception.InvalidDishCategoryException;
 import co.com.srdejo.plazoleta.domain.exception.InvalidOwnerException;
 import co.com.srdejo.plazoleta.domain.exception.UnauthorizedException;
 import co.com.srdejo.plazoleta.infrastructure.exception.NoDataFoundException;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
@@ -14,6 +17,7 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @ControllerAdvice
@@ -34,12 +38,13 @@ public class ControllerAdvisor {
     @ExceptionHandler(InvalidOwnerException.class)
     public ResponseEntity<Map<String, Object>> handleDomainException(InvalidOwnerException invalidOwnerException) {
 
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put(CODE, invalidOwnerException.getError().getCode());
-        body.put(MESSAGE, invalidOwnerException.getError().getDescription());
-        body.put(TIMESTAMP, Instant.now());
+        return getMapResponseEntity(invalidOwnerException.getError());
+    }
 
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    @ExceptionHandler(InvalidDishCategoryException.class)
+    public ResponseEntity<Map<String, Object>> handleDomainException(InvalidDishCategoryException invalidDishCategoryException) {
+
+        return getMapResponseEntity(invalidDishCategoryException.getError());
     }
 
     @ExceptionHandler(feign.RetryableException.class)
@@ -63,6 +68,30 @@ public class ControllerAdvisor {
         body.put(MESSAGE, exception.getError().getDescription());
         body.put(TIMESTAMP, Instant.now());
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, Object>> handleValidationException(MethodArgumentNotValidException exception) {
+
+        String message = exception.getBindingResult().getFieldErrors().stream()
+                .map(fieldError -> fieldError.getField() + " " + fieldError.getDefaultMessage())
+                .collect(Collectors.joining(", "));
+
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put(MESSAGE, message);
+        body.put(TIMESTAMP, Instant.now());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
+
+    @NonNull
+    private ResponseEntity<Map<String, Object>> getMapResponseEntity(ErrorCodesEnum error) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put(CODE, error.getCode());
+        body.put(MESSAGE, error.getDescription());
+        body.put(TIMESTAMP, Instant.now());
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
     }
 
 }

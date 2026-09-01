@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -32,6 +33,7 @@ public class RestaurantRestController {
             @ApiResponse(responseCode = "201", description = "Restaurant created", content = @Content),
             @ApiResponse(responseCode = "409", description = "Restaurant already exists", content = @Content)
     })
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/")
     public ResponseEntity<Void> saveRestaurant(@RequestBody RestaurantRequestDto restaurantRequestDto) {
         restaurantHandler.saveRestaurant(restaurantRequestDto);
@@ -45,6 +47,7 @@ public class RestaurantRestController {
                             array = @ArraySchema(schema = @Schema(implementation = RestaurantResponseDto.class)))),
             @ApiResponse(responseCode = "404", description = "No data found", content = @Content)
     })
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/")
     public ResponseEntity<List<RestaurantResponseDto>> getAllRestaurants() {
         return ResponseEntity.ok(restaurantHandler.getAllRestaurants());

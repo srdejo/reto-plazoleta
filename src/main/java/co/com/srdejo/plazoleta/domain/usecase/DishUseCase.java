@@ -2,10 +2,12 @@ package co.com.srdejo.plazoleta.domain.usecase;
 
 import co.com.srdejo.plazoleta.domain.api.IDishServicePort;
 import co.com.srdejo.plazoleta.domain.exception.ErrorCodesEnum;
+import co.com.srdejo.plazoleta.domain.exception.InvalidDishCategoryException;
 import co.com.srdejo.plazoleta.domain.exception.InvalidOwnerException;
 import co.com.srdejo.plazoleta.domain.exception.UnauthorizedException;
 import co.com.srdejo.plazoleta.domain.model.DishModel;
 import co.com.srdejo.plazoleta.domain.model.RestaurantModel;
+import co.com.srdejo.plazoleta.domain.spi.IDishCategoryPersistencePort;
 import co.com.srdejo.plazoleta.domain.spi.IDishPersistencePort;
 import co.com.srdejo.plazoleta.domain.spi.IOwnerClientPort;
 import co.com.srdejo.plazoleta.domain.spi.IRestaurantPersistencePort;
@@ -17,16 +19,26 @@ public class DishUseCase implements IDishServicePort {
     private final IDishPersistencePort dishPersistencePort;
     private final IRestaurantPersistencePort restaurantPersistencePort;
     private final IOwnerClientPort ownerClientPort;
+    private final IDishCategoryPersistencePort dishCategoryPersistencePort;
 
-    public DishUseCase(IDishPersistencePort dishPersistencePort, IRestaurantPersistencePort restaurantPersistencePort, IOwnerClientPort ownerClientPort) {
+    public DishUseCase(
+            IDishPersistencePort dishPersistencePort,
+            IRestaurantPersistencePort restaurantPersistencePort,
+            IOwnerClientPort ownerClientPort,
+            IDishCategoryPersistencePort dishCategoryPersistencePort
+    ) {
         this.dishPersistencePort = dishPersistencePort;
         this.restaurantPersistencePort = restaurantPersistencePort;
         this.ownerClientPort = ownerClientPort;
+        this.dishCategoryPersistencePort = dishCategoryPersistencePort;
     }
 
     @Override
     public void saveDish(DishModel dishModel, Long ownerId) {
         validateOwner(ownerId, dishModel);
+        if (!dishCategoryPersistencePort.existsById(dishModel.getDishCategoryId())) {
+            throw new InvalidDishCategoryException(ErrorCodesEnum.INVALID_DISH_CATEGORY_ID);
+        }
         dishModel.setActive(true);
         dishPersistencePort.saveDish(dishModel);
     }

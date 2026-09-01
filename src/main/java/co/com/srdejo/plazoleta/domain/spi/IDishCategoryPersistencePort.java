@@ -8,4 +8,6 @@ public interface IDishCategoryPersistencePort {
     void saveDishCategory(DishCategoryModel restaurantModel);
 
     List<DishCategoryModel> getAllDishCategories();
+
+    boolean existsById(Long id);
 }

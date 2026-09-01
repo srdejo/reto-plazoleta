@@ -1,10 +1,12 @@
 package co.com.srdejo.plazoleta.domain.usecase;
 
 import co.com.srdejo.plazoleta.domain.exception.ErrorCodesEnum;
+import co.com.srdejo.plazoleta.domain.exception.InvalidDishCategoryException;
 import co.com.srdejo.plazoleta.domain.exception.InvalidOwnerException;
 import co.com.srdejo.plazoleta.domain.exception.UnauthorizedException;
 import co.com.srdejo.plazoleta.domain.model.DishModel;
 import co.com.srdejo.plazoleta.domain.model.RestaurantModel;
+import co.com.srdejo.plazoleta.domain.spi.IDishCategoryPersistencePort;
 import co.com.srdejo.plazoleta.domain.spi.IDishPersistencePort;
 import co.com.srdejo.plazoleta.domain.spi.IOwnerClientPort;
 import co.com.srdejo.plazoleta.domain.spi.IRestaurantPersistencePort;
@@ -35,11 +37,14 @@ class DishUseCaseTest {
     @Mock
     private IOwnerClientPort ownerClientPort;
 
+    @Mock
+    private IDishCategoryPersistencePort dishCategoryPersistencePort;
+
     private DishUseCase dishUseCase;
 
     @BeforeEach
     void setUp() {
-        dishUseCase = new DishUseCase(dishPersistencePort, restaurantPersistencePort, ownerClientPort);
+        dishUseCase = new DishUseCase(dishPersistencePort, restaurantPersistencePort, ownerClientPort, dishCategoryPersistencePort);
     }
 
     private DishModel dishModel() {
@@ -57,11 +62,27 @@ class DishUseCaseTest {
         DishModel model = dishModel();
         when(ownerClientPort.existsOwner(OWNER_ID)).thenReturn(true);
         when(restaurantPersistencePort.getRestaurant(RESTAURANT_ID)).thenReturn(restaurantModel(OWNER_ID));
+        when(dishCategoryPersistencePort.existsById(model.getDishCategoryId())).thenReturn(true);
 
         dishUseCase.saveDish(model, OWNER_ID);
 
         verify(dishPersistencePort).saveDish(model);
         assertThat(model.getActive()).isTrue();
+    }
+
+    @Test
+    void saveDish_dishCategoryDoesNotExist_throwsInvalidDishCategoryException() {
+        DishModel model = dishModel();
+        when(ownerClientPort.existsOwner(OWNER_ID)).thenReturn(true);
+        when(restaurantPersistencePort.getRestaurant(RESTAURANT_ID)).thenReturn(restaurantModel(OWNER_ID));
+        when(dishCategoryPersistencePort.existsById(model.getDishCategoryId())).thenReturn(false);
+
+        assertThatThrownBy(() -> dishUseCase.saveDish(model, OWNER_ID))
+                .isInstanceOf(InvalidDishCategoryException.class)
+                .satisfies(ex -> assertThat(((InvalidDishCategoryException) ex).getError())
+                        .isEqualTo(ErrorCodesEnum.INVALID_DISH_CATEGORY_ID));
+
+        verifyNoInteractions(dishPersistencePort);
     }
 
     @Test

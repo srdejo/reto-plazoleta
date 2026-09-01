@@ -17,5 +17,8 @@ feign-url:
   users: http://localhost:8081/api/v1
   owners: ${feign-url.users}/owners
 
+jwt:
+  secret: una-clave-secreta-de-al-menos-32-bytes
+
 appDescription: "Plazoleta api"
 appVersion: "1.0.0"

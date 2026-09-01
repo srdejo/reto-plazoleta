@@ -31,4 +31,9 @@ public class DishCategoryJpaAdapter implements IDishCategoryPersistencePort {
         }
         return restaurantEntityMapper.toDishCategoryModelList(entityList);
     }
+
+    @Override
+    public boolean existsById(Long id) {
+        return restaurantRepository.existsById(id);
+    }
 }

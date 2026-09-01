@@ -14,6 +14,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -30,6 +31,7 @@ public class DishRestController {
             @ApiResponse(responseCode = "201", description = "Dish created", content = @Content),
             @ApiResponse(responseCode = "409", description = "Dish already exists", content = @Content)
     })
+    @PreAuthorize("hasRole('OWNER')")
     @PostMapping("/")
     public ResponseEntity<Void> saveDish(@Valid @RequestBody DishRequestDto dishRequestDto) {
         dishHandler.saveDish(dishRequestDto);
@@ -56,6 +58,7 @@ public class DishRestController {
             @ApiResponse(responseCode = "404", description = "Dish not found", content = @Content),
             @ApiResponse(responseCode = "400", description = "Invalid request body", content = @Content)
     })
+    @PreAuthorize("hasRole('OWNER')")
     @PatchMapping("/{id}")
     public ResponseEntity<DishResponseDto> patchDish(
             @PathVariable Long id,

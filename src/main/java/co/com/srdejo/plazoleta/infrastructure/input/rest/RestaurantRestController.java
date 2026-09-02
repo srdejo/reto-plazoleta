@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -51,6 +52,19 @@ public class RestaurantRestController {
     @GetMapping("/")
     public ResponseEntity<List<RestaurantResponseDto>> getAllRestaurants() {
         return ResponseEntity.ok(restaurantHandler.getAllRestaurants());
+    }
+
+    @Operation(summary = "Get restaurant by id")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Restaurant returned",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = RestaurantResponseDto.class))),
+            @ApiResponse(responseCode = "404", description = "Restaurant not found", content = @Content)
+    })
+    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER')")
+    @GetMapping("/{id}")
+    public ResponseEntity<RestaurantResponseDto> getRestaurant(@PathVariable Long id) {
+        return ResponseEntity.ok(restaurantHandler.getRestaurant(id));
     }
 
 }

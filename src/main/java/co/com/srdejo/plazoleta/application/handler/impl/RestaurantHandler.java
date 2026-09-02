@@ -32,4 +32,9 @@ public class RestaurantHandler implements IRestaurantHandler {
     public List<RestaurantResponseDto> getAllRestaurants() {
         return objectResponseMapper.toResponseList(objectServicePort.getAllRestaurants());
     }
+
+    @Override
+    public RestaurantResponseDto getRestaurant(Long id) {
+        return objectResponseMapper.toResponse(objectServicePort.getRestaurant(id));
+    }
 }

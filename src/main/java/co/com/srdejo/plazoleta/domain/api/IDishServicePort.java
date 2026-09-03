@@ -11,4 +11,6 @@ public interface IDishServicePort {
     List<DishModel> getAllDishes();
 
     DishModel patchDish(DishModel request);
+
+    DishModel updateDishStatus(Long id, boolean enabled);
 }

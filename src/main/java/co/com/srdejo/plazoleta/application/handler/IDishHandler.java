@@ -13,4 +13,6 @@ public interface IDishHandler {
     List<DishResponseDto> getAllDishes();
 
     DishResponseDto patchDish(Long id, DishPatchRequestDto request);
+
+    DishResponseDto updateDishStatus(Long id, boolean enabled);
 }

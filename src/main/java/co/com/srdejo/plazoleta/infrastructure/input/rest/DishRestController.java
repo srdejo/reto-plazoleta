@@ -46,7 +46,7 @@ public class DishRestController {
             @ApiResponse(responseCode = "404", description = "No data found", content = @Content)
     })
     @GetMapping()
-    public ResponseEntity<List<DishResponseDto>> getAllDishs() {
+    public ResponseEntity<List<DishResponseDto>> getAllDishes() {
         return ResponseEntity.ok(dishHandler.getAllDishes());
     }
 
@@ -65,4 +65,26 @@ public class DishRestController {
             @Valid @RequestBody DishPatchRequestDto request) {
         return ResponseEntity.ok(dishHandler.patchDish(id, request));
     }
+
+
+    @Operation(summary = "Enable or disable a dish")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Dish status updated",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = DishResponseDto.class))
+            ),
+            @ApiResponse(responseCode = "404", description = "Dish not found", content = @Content),
+            @ApiResponse(responseCode = "400", description = "Invalid request", content = @Content)
+    })
+    @PreAuthorize("hasRole('OWNER')")
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<DishResponseDto> updateDishStatus(
+            @PathVariable Long id,
+            @RequestParam boolean enabled) {
+
+        return ResponseEntity.ok(dishHandler.updateDishStatus(id, enabled));
+    }
+
+
 }

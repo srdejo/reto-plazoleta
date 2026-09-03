@@ -41,4 +41,9 @@ public class DishHandler implements IDishHandler {
         dishRequestMapper.patch(id, request,  dishModel);
         return dishResponseMapper.toResponse(dishServicePort.patchDish(dishModel));
     }
+
+    @Override
+    public DishResponseDto updateDishStatus(Long id, boolean enabled) {
+        return dishResponseMapper.toResponse(dishServicePort.updateDishStatus(id, enabled));
+    }
 }

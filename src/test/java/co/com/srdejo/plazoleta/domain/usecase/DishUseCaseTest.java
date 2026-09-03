@@ -15,6 +15,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
@@ -185,6 +187,74 @@ class DishUseCaseTest {
         when(ownerClientPort.existsOwner(OWNER_ID)).thenReturn(false);
 
         assertThatThrownBy(() -> dishUseCase.patchDish(patchRequest))
+                .isInstanceOf(InvalidOwnerException.class)
+                .satisfies(ex -> assertThat(((InvalidOwnerException) ex).getError())
+                        .isEqualTo(ErrorCodesEnum.INVALID_OWNER_ID));
+
+        verifyNoInteractions(restaurantPersistencePort);
+        verify(dishPersistencePort, never()).saveDish(any());
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void updateDishStatus_ownerIsRestaurantOwner_updatesActiveStatus(boolean enabled) {
+        DishModel existingDish = dishModel();
+
+        when(authenticatedUserPort.getAuthenticatedUserId())
+                .thenReturn(OWNER_ID);
+        when(dishPersistencePort.findById(5L))
+                .thenReturn(existingDish);
+        when(ownerClientPort.existsOwner(OWNER_ID))
+                .thenReturn(true);
+        when(restaurantPersistencePort.getRestaurant(RESTAURANT_ID))
+                .thenReturn(restaurantModel(OWNER_ID));
+        when(dishPersistencePort.saveDish(existingDish))
+                .thenReturn(existingDish);
+
+        DishModel result = dishUseCase.updateDishStatus(5L, enabled);
+
+        assertThat(result.getActive()).isEqualTo(enabled);
+
+        verify(dishPersistencePort).findById(5L);
+        verify(ownerClientPort).existsOwner(OWNER_ID);
+        verify(restaurantPersistencePort).getRestaurant(RESTAURANT_ID);
+        verify(dishPersistencePort).saveDish(existingDish);
+    }
+
+    @Test
+    void updateDishStatus_ownerNotAuthorizedForDishRestaurant_throwsUnauthorizedExceptionAndDoesNotPersist() {
+        DishModel existingDish = dishModel();
+
+        when(authenticatedUserPort.getAuthenticatedUserId())
+                .thenReturn(OWNER_ID);
+        when(dishPersistencePort.findById(5L))
+                .thenReturn(existingDish);
+        when(ownerClientPort.existsOwner(OWNER_ID))
+                .thenReturn(true);
+        when(restaurantPersistencePort.getRestaurant(RESTAURANT_ID))
+                .thenReturn(restaurantModel(999L));
+
+        assertThatThrownBy(() -> dishUseCase.updateDishStatus(5L, false))
+                .isInstanceOf(UnauthorizedException.class)
+                .satisfies(ex -> assertThat(((UnauthorizedException) ex).getError())
+                        .isEqualTo(ErrorCodesEnum.OWNER_NOT_AUTHORIZED));
+
+        verify(restaurantPersistencePort).getRestaurant(RESTAURANT_ID);
+        verify(dishPersistencePort, never()).saveDish(any());
+    }
+
+    @Test
+    void updateDishStatus_ownerDoesNotExist_throwsInvalidOwnerExceptionAndDoesNotPersist() {
+        DishModel existingDish = dishModel();
+
+        when(authenticatedUserPort.getAuthenticatedUserId())
+                .thenReturn(OWNER_ID);
+        when(dishPersistencePort.findById(5L))
+                .thenReturn(existingDish);
+        when(ownerClientPort.existsOwner(OWNER_ID))
+                .thenReturn(false);
+
+        assertThatThrownBy(() -> dishUseCase.updateDishStatus(5L, false))
                 .isInstanceOf(InvalidOwnerException.class)
                 .satisfies(ex -> assertThat(((InvalidOwnerException) ex).getError())
                         .isEqualTo(ErrorCodesEnum.INVALID_OWNER_ID));

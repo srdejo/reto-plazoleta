@@ -53,10 +53,13 @@ class RestaurantEndToEndIT {
                         .content(requestJson))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(get("/api/v1/restaurants/")
+        mockMvc.perform(get("/api/v1/restaurants")
                         .with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].name").value("Pizzeria La Bella"))
-                .andExpect(jsonPath("$[0].ownerId").value(10));
+                .andExpect(jsonPath("$.content[0].name").value("Pizzeria La Bella"))
+                .andExpect(jsonPath("$.content[0].urlLogo").value("http://logo.png"))
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.totalPages").value(1));
     }
 }

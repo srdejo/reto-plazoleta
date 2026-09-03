@@ -1,5 +1,6 @@
 package co.com.srdejo.plazoleta.application.mapper;
 
+import co.com.srdejo.plazoleta.application.dto.response.RestaurantNameAndLogoResponseDto;
 import co.com.srdejo.plazoleta.application.dto.response.RestaurantResponseDto;
 import co.com.srdejo.plazoleta.domain.model.RestaurantModel;
 import org.mapstruct.Mapper;
@@ -13,5 +14,7 @@ import java.util.List;
 public interface IRestaurantResponseMapper {
     RestaurantResponseDto toResponse(RestaurantModel restaurantModel);
 
-    List<RestaurantResponseDto> toResponseList(List<RestaurantModel> restaurantModelList);
+    RestaurantNameAndLogoResponseDto toNameAndLogoResponse(RestaurantModel restaurantModel);
+
+    List<RestaurantNameAndLogoResponseDto> toNameAndLogoResponseDtoList(List<RestaurantModel> restaurantModelList);
 }

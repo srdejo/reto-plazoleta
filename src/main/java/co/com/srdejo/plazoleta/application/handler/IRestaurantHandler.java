@@ -1,15 +1,15 @@
 package co.com.srdejo.plazoleta.application.handler;
 
 import co.com.srdejo.plazoleta.application.dto.request.RestaurantRequestDto;
+import co.com.srdejo.plazoleta.application.dto.response.PageResponseDto;
+import co.com.srdejo.plazoleta.application.dto.response.RestaurantNameAndLogoResponseDto;
 import co.com.srdejo.plazoleta.application.dto.response.RestaurantResponseDto;
-
-import java.util.List;
 
 public interface IRestaurantHandler {
 
     void saveRestaurant(RestaurantRequestDto restaurantRequestDto);
 
-    List<RestaurantResponseDto> getAllRestaurants();
+    PageResponseDto<RestaurantNameAndLogoResponseDto> getAllRestaurants(int page, int size, boolean ascending);
 
     RestaurantResponseDto getRestaurant(Long id);
 }

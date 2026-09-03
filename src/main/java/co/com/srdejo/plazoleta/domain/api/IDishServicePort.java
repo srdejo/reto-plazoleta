@@ -6,9 +6,9 @@ import java.util.List;
 
 public interface IDishServicePort {
 
-    void saveDish(DishModel objectModel, Long ownerId);
+    void saveDish(DishModel objectModel);
 
     List<DishModel> getAllDishes();
 
-    DishModel patchDish(DishModel request, Long ownerId);
+    DishModel patchDish(DishModel request);
 }

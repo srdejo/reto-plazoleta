@@ -6,6 +6,7 @@ import co.com.srdejo.plazoleta.domain.exception.InvalidOwnerException;
 import co.com.srdejo.plazoleta.domain.exception.UnauthorizedException;
 import co.com.srdejo.plazoleta.domain.model.DishModel;
 import co.com.srdejo.plazoleta.domain.model.RestaurantModel;
+import co.com.srdejo.plazoleta.domain.spi.IAuthenticatedUserPort;
 import co.com.srdejo.plazoleta.domain.spi.IDishCategoryPersistencePort;
 import co.com.srdejo.plazoleta.domain.spi.IDishPersistencePort;
 import co.com.srdejo.plazoleta.domain.spi.IOwnerClientPort;
@@ -40,11 +41,15 @@ class DishUseCaseTest {
     @Mock
     private IDishCategoryPersistencePort dishCategoryPersistencePort;
 
+    @Mock
+    private IAuthenticatedUserPort authenticatedUserPort;
+
     private DishUseCase dishUseCase;
 
     @BeforeEach
     void setUp() {
-        dishUseCase = new DishUseCase(dishPersistencePort, restaurantPersistencePort, ownerClientPort, dishCategoryPersistencePort);
+        dishUseCase = new DishUseCase(dishPersistencePort, restaurantPersistencePort, ownerClientPort, dishCategoryPersistencePort, authenticatedUserPort);
+        lenient().when(authenticatedUserPort.getAuthenticatedUserId()).thenReturn(OWNER_ID);
     }
 
     private DishModel dishModel() {
@@ -64,7 +69,7 @@ class DishUseCaseTest {
         when(restaurantPersistencePort.getRestaurant(RESTAURANT_ID)).thenReturn(restaurantModel(OWNER_ID));
         when(dishCategoryPersistencePort.existsById(model.getDishCategoryId())).thenReturn(true);
 
-        dishUseCase.saveDish(model, OWNER_ID);
+        dishUseCase.saveDish(model);
 
         verify(dishPersistencePort).saveDish(model);
         assertThat(model.getActive()).isTrue();
@@ -77,7 +82,7 @@ class DishUseCaseTest {
         when(restaurantPersistencePort.getRestaurant(RESTAURANT_ID)).thenReturn(restaurantModel(OWNER_ID));
         when(dishCategoryPersistencePort.existsById(model.getDishCategoryId())).thenReturn(false);
 
-        assertThatThrownBy(() -> dishUseCase.saveDish(model, OWNER_ID))
+        assertThatThrownBy(() -> dishUseCase.saveDish(model))
                 .isInstanceOf(InvalidDishCategoryException.class)
                 .satisfies(ex -> assertThat(((InvalidDishCategoryException) ex).getError())
                         .isEqualTo(ErrorCodesEnum.INVALID_DISH_CATEGORY_ID));
@@ -91,7 +96,7 @@ class DishUseCaseTest {
         when(ownerClientPort.existsOwner(OWNER_ID)).thenReturn(true);
         when(restaurantPersistencePort.getRestaurant(RESTAURANT_ID)).thenReturn(restaurantModel(999L));
 
-        assertThatThrownBy(() -> dishUseCase.saveDish(model, OWNER_ID))
+        assertThatThrownBy(() -> dishUseCase.saveDish(model))
                 .isInstanceOf(UnauthorizedException.class)
                 .satisfies(ex -> assertThat(((UnauthorizedException) ex).getError())
                         .isEqualTo(ErrorCodesEnum.OWNER_NOT_AUTHORIZED));
@@ -104,7 +109,7 @@ class DishUseCaseTest {
         DishModel model = dishModel();
         when(ownerClientPort.existsOwner(OWNER_ID)).thenReturn(false);
 
-        assertThatThrownBy(() -> dishUseCase.saveDish(model, OWNER_ID))
+        assertThatThrownBy(() -> dishUseCase.saveDish(model))
                 .isInstanceOf(InvalidOwnerException.class)
                 .satisfies(ex -> assertThat(((InvalidOwnerException) ex).getError())
                         .isEqualTo(ErrorCodesEnum.INVALID_OWNER_ID));
@@ -119,7 +124,7 @@ class DishUseCaseTest {
         when(restaurantPersistencePort.getRestaurant(RESTAURANT_ID))
                 .thenThrow(new RuntimeException("Restaurant not found"));
 
-        assertThatThrownBy(() -> dishUseCase.saveDish(model, OWNER_ID))
+        assertThatThrownBy(() -> dishUseCase.saveDish(model))
                 .isInstanceOf(RuntimeException.class);
 
         verifyNoInteractions(dishPersistencePort);
@@ -137,7 +142,7 @@ class DishUseCaseTest {
         when(restaurantPersistencePort.getRestaurant(RESTAURANT_ID)).thenReturn(restaurantModel(OWNER_ID));
         when(dishPersistencePort.saveDish(existingDish)).thenReturn(existingDish);
 
-        DishModel result = dishUseCase.patchDish(patchRequest, OWNER_ID);
+        DishModel result = dishUseCase.patchDish(patchRequest);
 
         assertThat(result.getPrice()).isEqualByComparingTo(new BigDecimal(18000));
         assertThat(result.getDescription()).isEqualTo("Hamburguesa con carne, pollo y tocineta");
@@ -156,7 +161,7 @@ class DishUseCaseTest {
         when(ownerClientPort.existsOwner(OWNER_ID)).thenReturn(true);
         when(restaurantPersistencePort.getRestaurant(RESTAURANT_ID)).thenReturn(restaurantModel(999L));
 
-        assertThatThrownBy(() -> dishUseCase.patchDish(patchRequest, OWNER_ID))
+        assertThatThrownBy(() -> dishUseCase.patchDish(patchRequest))
                 .isInstanceOf(UnauthorizedException.class)
                 .satisfies(ex -> assertThat(((UnauthorizedException) ex).getError())
                         .isEqualTo(ErrorCodesEnum.OWNER_NOT_AUTHORIZED));
@@ -175,7 +180,7 @@ class DishUseCaseTest {
         when(dishPersistencePort.findById(5L)).thenReturn(existingDish);
         when(ownerClientPort.existsOwner(OWNER_ID)).thenReturn(false);
 
-        assertThatThrownBy(() -> dishUseCase.patchDish(patchRequest, OWNER_ID))
+        assertThatThrownBy(() -> dishUseCase.patchDish(patchRequest))
                 .isInstanceOf(InvalidOwnerException.class)
                 .satisfies(ex -> assertThat(((InvalidOwnerException) ex).getError())
                         .isEqualTo(ErrorCodesEnum.INVALID_OWNER_ID));

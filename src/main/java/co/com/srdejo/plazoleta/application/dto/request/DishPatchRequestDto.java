@@ -19,8 +19,4 @@ public class DishPatchRequestDto {
     private BigDecimal price;
     @NotBlank
     private String description;
-    @NotNull
-    private Long restaurantId; // ToDo when implement authorization get from context or JWT
-    @NotNull
-    private Long ownerId; // ToDo when implement authorization get from context or JWT
 }

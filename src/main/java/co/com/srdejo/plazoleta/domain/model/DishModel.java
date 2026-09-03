@@ -21,7 +21,7 @@ public class DishModel {
     private String urlImage;
     private Boolean active;
 
-    public void patch( BigDecimal price, String description) {
+    public void updatePriceAndDescription(BigDecimal price, String description) {
         this.price = price;
         this.description = description;
     }

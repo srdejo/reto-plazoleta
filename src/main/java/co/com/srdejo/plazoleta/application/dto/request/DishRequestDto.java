@@ -24,7 +24,5 @@ public class DishRequestDto {
     @NotBlank
     private String urlImage;
     @NotNull
-    private Long restaurantId; // ToDo when implement authorization get from context or JWT
-    @NotNull
-    private Long ownerId; // ToDo when implement authorization get from context or JWT
+    private Long restaurantId;
 }

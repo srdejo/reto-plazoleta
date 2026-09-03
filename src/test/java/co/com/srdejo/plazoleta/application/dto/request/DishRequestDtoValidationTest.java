@@ -42,7 +42,6 @@ class DishRequestDtoValidationTest {
         dto.setDescription("Hamburguesa con carne y pollo");
         dto.setUrlImage("http://image.png");
         dto.setRestaurantId(1L);
-        dto.setOwnerId(10L);
         return dto;
     }
 
@@ -59,8 +58,7 @@ class DishRequestDtoValidationTest {
                 Arguments.of("description", (java.util.function.Consumer<DishRequestDto>) dto -> dto.setDescription(" ")),
                 Arguments.of("urlImage", (java.util.function.Consumer<DishRequestDto>) dto -> dto.setUrlImage(" ")),
                 Arguments.of("dishCategoryId", (java.util.function.Consumer<DishRequestDto>) dto -> dto.setDishCategoryId(null)),
-                Arguments.of("restaurantId", (java.util.function.Consumer<DishRequestDto>) dto -> dto.setRestaurantId(null)),
-                Arguments.of("ownerId", (java.util.function.Consumer<DishRequestDto>) dto -> dto.setOwnerId(null))
+                Arguments.of("restaurantId", (java.util.function.Consumer<DishRequestDto>) dto -> dto.setRestaurantId(null))
         );
     }
 

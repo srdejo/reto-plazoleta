@@ -3,6 +3,7 @@ package co.com.srdejo.plazoleta.infrastructure.configuration;
 import co.com.srdejo.plazoleta.domain.api.IDishCategoryServicePort;
 import co.com.srdejo.plazoleta.domain.api.IDishServicePort;
 import co.com.srdejo.plazoleta.domain.api.IRestaurantServicePort;
+import co.com.srdejo.plazoleta.domain.spi.IAuthenticatedUserPort;
 import co.com.srdejo.plazoleta.domain.spi.IDishCategoryPersistencePort;
 import co.com.srdejo.plazoleta.domain.spi.IDishPersistencePort;
 import co.com.srdejo.plazoleta.domain.spi.IOwnerClientPort;
@@ -21,6 +22,7 @@ import co.com.srdejo.plazoleta.infrastructure.out.jpa.mapper.IRestaurantEntityMa
 import co.com.srdejo.plazoleta.infrastructure.out.jpa.repository.IDishCategoryRepository;
 import co.com.srdejo.plazoleta.infrastructure.out.jpa.repository.IDishRepository;
 import co.com.srdejo.plazoleta.infrastructure.out.jpa.repository.IRestaurantRepository;
+import co.com.srdejo.plazoleta.infrastructure.out.security.SecurityContextUserAdapter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -58,7 +60,12 @@ public class BeanConfiguration {
 
     @Bean
     public IDishServicePort dishServicePort() {
-        return new DishUseCase(dishPersistencePort(), restaurantPersistencePort(), ownerClientPort(), dishCategoryPersistencePort());
+        return new DishUseCase(dishPersistencePort(), restaurantPersistencePort(), ownerClientPort(), dishCategoryPersistencePort(), authenticatedUserPort());
+    }
+
+    @Bean
+    public IAuthenticatedUserPort authenticatedUserPort() {
+        return new SecurityContextUserAdapter();
     }
 
     @Bean

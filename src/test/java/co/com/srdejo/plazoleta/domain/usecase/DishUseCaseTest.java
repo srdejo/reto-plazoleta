@@ -16,10 +16,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -256,6 +260,55 @@ class DishUseCaseTest {
                         .isEqualTo(ErrorCodesEnum.INVALID_OWNER_ID));
 
         verifyNoInteractions(restaurantPersistencePort);
+        verify(dishPersistencePort, never()).saveDish(any());
+    }
+
+    static Stream<Arguments> patchDishPriceAndDescriptionValues() {
+        return Stream.of(
+                Arguments.of(new BigDecimal(18000), "Hamburguesa con carne, pollo y tocineta"),
+                Arguments.of(new BigDecimal(20000), "Hamburguesa doble carne"),
+                Arguments.of(new BigDecimal(9000), "Hamburguesa sencilla sin queso")
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("patchDishPriceAndDescriptionValues")
+    void patchDish_ownerIsRestaurantOwner_updatesPriceAndDescriptionForEachValueSet(
+            BigDecimal newPrice, String newDescription) {
+        DishModel existingDish = new DishModel(5L, "Hamburguesa Mixta", new BigDecimal(15000), 1L, RESTAURANT_ID,
+                "Hamburguesa con carne y pollo", "http://image.png", true);
+        DishModel patchRequest = new DishModel(5L, null, newPrice, null, RESTAURANT_ID, newDescription, null, null);
+
+        when(dishPersistencePort.findById(5L)).thenReturn(existingDish);
+        when(ownerClientPort.existsOwner(OWNER_ID)).thenReturn(true);
+        when(restaurantPersistencePort.getRestaurant(RESTAURANT_ID)).thenReturn(restaurantModel(OWNER_ID));
+        when(dishPersistencePort.saveDish(existingDish)).thenReturn(existingDish);
+
+        DishModel result = dishUseCase.patchDish(patchRequest);
+
+        assertThat(result.getPrice()).isEqualByComparingTo(newPrice);
+        assertThat(result.getDescription()).isEqualTo(newDescription);
+        verify(dishPersistencePort).saveDish(existingDish);
+    }
+
+    @Test
+    void patchDish_ownerNotOwnerOfRestaurant_doesNotUpdateDishAndThrowsUnauthorizedException() {
+        DishModel existingDish = new DishModel(5L, "Hamburguesa Mixta", new BigDecimal(15000), 1L, RESTAURANT_ID,
+                "Hamburguesa con carne y pollo", "http://image.png", true);
+        DishModel patchRequest = new DishModel(5L, null, new BigDecimal(30000), null, RESTAURANT_ID,
+                "Intento de actualizacion no autorizada", null, null);
+
+        when(dishPersistencePort.findById(5L)).thenReturn(existingDish);
+        when(ownerClientPort.existsOwner(OWNER_ID)).thenReturn(true);
+        when(restaurantPersistencePort.getRestaurant(RESTAURANT_ID)).thenReturn(restaurantModel(999L));
+
+        assertThatThrownBy(() -> dishUseCase.patchDish(patchRequest))
+                .isInstanceOf(UnauthorizedException.class)
+                .satisfies(ex -> assertThat(((UnauthorizedException) ex).getError())
+                        .isEqualTo(ErrorCodesEnum.OWNER_NOT_AUTHORIZED));
+
+        assertThat(existingDish.getPrice()).isEqualByComparingTo(new BigDecimal(15000));
+        assertThat(existingDish.getDescription()).isEqualTo("Hamburguesa con carne y pollo");
         verify(dishPersistencePort, never()).saveDish(any());
     }
 }

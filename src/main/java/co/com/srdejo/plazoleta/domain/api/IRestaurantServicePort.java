@@ -1,14 +1,14 @@
 package co.com.srdejo.plazoleta.domain.api;
 
+import co.com.srdejo.plazoleta.domain.model.PageRequestModel;
+import co.com.srdejo.plazoleta.domain.model.PageResultModel;
 import co.com.srdejo.plazoleta.domain.model.RestaurantModel;
-
-import java.util.List;
 
 public interface IRestaurantServicePort {
 
     void saveRestaurant(RestaurantModel objectModel);
 
-    List<RestaurantModel> getAllRestaurants();
+    PageResultModel<RestaurantModel> getAllRestaurants(PageRequestModel pageRequestModel);
 
     RestaurantModel getRestaurant(Long id);
 }

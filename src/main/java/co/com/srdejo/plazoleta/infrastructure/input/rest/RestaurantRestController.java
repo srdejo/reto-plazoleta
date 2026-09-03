@@ -1,10 +1,12 @@
 package co.com.srdejo.plazoleta.infrastructure.input.rest;
 
 import co.com.srdejo.plazoleta.application.dto.request.RestaurantRequestDto;
+import co.com.srdejo.plazoleta.application.dto.response.PageResponseDto;
+import co.com.srdejo.plazoleta.application.dto.response.RestaurantNameAndLogoResponseDto;
 import co.com.srdejo.plazoleta.application.dto.response.RestaurantResponseDto;
 import co.com.srdejo.plazoleta.application.handler.IRestaurantHandler;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -13,14 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/restaurants")
@@ -45,13 +40,20 @@ public class RestaurantRestController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "All restaurants returned",
                     content = @Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = RestaurantResponseDto.class)))),
+                            schema = @Schema(implementation = PageResponseDto.class))),
             @ApiResponse(responseCode = "404", description = "No data found", content = @Content)
     })
-    @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/")
-    public ResponseEntity<List<RestaurantResponseDto>> getAllRestaurants() {
-        return ResponseEntity.ok(restaurantHandler.getAllRestaurants());
+    @GetMapping()
+    public ResponseEntity<PageResponseDto<RestaurantNameAndLogoResponseDto>> getAllRestaurants(
+            @Parameter(description = "Page number", example = "0")
+            @RequestParam(defaultValue = "0") int page,
+
+            @Parameter(description = "Number of restaurants per page", example = "10")
+            @RequestParam(defaultValue = "10") int size,
+
+            @Parameter(description = "Sort direction", example = "asc")
+            @RequestParam(defaultValue = "asc") String direction) {
+        return ResponseEntity.ok(restaurantHandler.getAllRestaurants(page, size, "asc".equalsIgnoreCase(direction)));
     }
 
     @Operation(summary = "Get restaurant by id")

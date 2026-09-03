@@ -3,11 +3,11 @@ package co.com.srdejo.plazoleta.domain.usecase;
 import co.com.srdejo.plazoleta.domain.api.IRestaurantServicePort;
 import co.com.srdejo.plazoleta.domain.exception.ErrorCodesEnum;
 import co.com.srdejo.plazoleta.domain.exception.InvalidOwnerException;
+import co.com.srdejo.plazoleta.domain.model.PageRequestModel;
+import co.com.srdejo.plazoleta.domain.model.PageResultModel;
 import co.com.srdejo.plazoleta.domain.model.RestaurantModel;
 import co.com.srdejo.plazoleta.domain.spi.IOwnerClientPort;
 import co.com.srdejo.plazoleta.domain.spi.IRestaurantPersistencePort;
-
-import java.util.List;
 
 public class RestaurantUseCase implements IRestaurantServicePort {
 
@@ -28,8 +28,8 @@ public class RestaurantUseCase implements IRestaurantServicePort {
     }
 
     @Override
-    public List<RestaurantModel> getAllRestaurants() {
-        return restaurantPersistencePort.getAllRestaurants();
+    public PageResultModel<RestaurantModel> getAllRestaurants(PageRequestModel pageRequestModel) {
+        return restaurantPersistencePort.getAllRestaurants(pageRequestModel);
     }
 
     @Override

@@ -3,16 +3,17 @@ package co.com.srdejo.plazoleta.application.handler.impl;
 import co.com.srdejo.plazoleta.application.dto.request.DishPatchRequestDto;
 import co.com.srdejo.plazoleta.application.dto.request.DishRequestDto;
 import co.com.srdejo.plazoleta.application.dto.response.DishResponseDto;
+import co.com.srdejo.plazoleta.application.dto.response.PageResponseDto;
 import co.com.srdejo.plazoleta.application.handler.IDishHandler;
 import co.com.srdejo.plazoleta.application.mapper.IDishRequestMapper;
 import co.com.srdejo.plazoleta.application.mapper.IDishResponseMapper;
 import co.com.srdejo.plazoleta.domain.api.IDishServicePort;
 import co.com.srdejo.plazoleta.domain.model.DishModel;
+import co.com.srdejo.plazoleta.domain.model.PageRequestModel;
+import co.com.srdejo.plazoleta.domain.model.PageResultModel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -30,11 +31,6 @@ public class DishHandler implements IDishHandler {
     }
 
     @Override
-    public List<DishResponseDto> getAllDishes() {
-        return dishResponseMapper.toResponseList(dishServicePort.getAllDishes());
-    }
-
-    @Override
     public DishResponseDto patchDish(Long id, DishPatchRequestDto request) {
         DishModel dishModel = new DishModel();
         dishModel.setId(id);
@@ -45,5 +41,17 @@ public class DishHandler implements IDishHandler {
     @Override
     public DishResponseDto updateDishStatus(Long id, boolean enabled) {
         return dishResponseMapper.toResponse(dishServicePort.updateDishStatus(id, enabled));
+    }
+
+    @Override
+    public PageResponseDto<DishResponseDto> getAllDishes(int page, int size, Long categoryId, boolean ascending) {
+        PageRequestModel pageRequestModel = new PageRequestModel(page, size, ascending);
+        PageResultModel<DishModel> pageResultModel = dishServicePort.getAllDishes(categoryId,pageRequestModel);
+        return new PageResponseDto<>(
+                dishResponseMapper.toResponseList(pageResultModel.content()),
+                pageResultModel.page(),
+                pageResultModel.size(),
+                pageResultModel.totalElements(),
+                pageResultModel.totalPages());
     }
 }

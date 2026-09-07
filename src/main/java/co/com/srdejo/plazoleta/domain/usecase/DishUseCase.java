@@ -6,14 +6,14 @@ import co.com.srdejo.plazoleta.domain.exception.InvalidDishCategoryException;
 import co.com.srdejo.plazoleta.domain.exception.InvalidOwnerException;
 import co.com.srdejo.plazoleta.domain.exception.UnauthorizedException;
 import co.com.srdejo.plazoleta.domain.model.DishModel;
+import co.com.srdejo.plazoleta.domain.model.PageRequestModel;
+import co.com.srdejo.plazoleta.domain.model.PageResultModel;
 import co.com.srdejo.plazoleta.domain.model.RestaurantModel;
 import co.com.srdejo.plazoleta.domain.spi.IAuthenticatedUserPort;
 import co.com.srdejo.plazoleta.domain.spi.IDishCategoryPersistencePort;
 import co.com.srdejo.plazoleta.domain.spi.IDishPersistencePort;
 import co.com.srdejo.plazoleta.domain.spi.IOwnerClientPort;
 import co.com.srdejo.plazoleta.domain.spi.IRestaurantPersistencePort;
-
-import java.util.List;
 
 public class DishUseCase implements IDishServicePort {
 
@@ -49,11 +49,6 @@ public class DishUseCase implements IDishServicePort {
     }
 
     @Override
-    public List<DishModel> getAllDishes() {
-        return dishPersistencePort.getAllDishes();
-    }
-
-    @Override
     public DishModel patchDish(DishModel dishModel) {
         Long ownerId = authenticatedUserPort.getAuthenticatedUserId();
         DishModel existingDish = dishPersistencePort.findById(dishModel.getId());
@@ -69,6 +64,11 @@ public class DishUseCase implements IDishServicePort {
         validateOwner(ownerId, existingDish);
         existingDish.setActive(enabled);
         return dishPersistencePort.saveDish(existingDish);
+    }
+
+    @Override
+    public PageResultModel<DishModel> getAllDishes(Long categoryId, PageRequestModel pageRequestModel) {
+        return dishPersistencePort.getAllDishes(categoryId, pageRequestModel);
     }
 
     private void validateOwner(Long ownerId, DishModel dishModel) {

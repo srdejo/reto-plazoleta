@@ -1,15 +1,9 @@
 package co.com.srdejo.plazoleta.domain.exception;
 
-import lombok.Getter;
-
-@Getter
-public class InvalidDishCategoryException extends RuntimeException {
-
-    private final ErrorCodesEnum error;
+public class InvalidDishCategoryException extends DomainException {
 
     public InvalidDishCategoryException(ErrorCodesEnum errorCode) {
-        super(errorCode.getDescription());
-        this.error = errorCode;
+        super(errorCode);
     }
 
 }

@@ -9,7 +9,9 @@ import co.com.srdejo.plazoleta.domain.usecase.DishCategoryUseCase;
 import co.com.srdejo.plazoleta.domain.usecase.DishUseCase;
 import co.com.srdejo.plazoleta.domain.usecase.OrderUseCase;
 import co.com.srdejo.plazoleta.domain.usecase.RestaurantUseCase;
+import co.com.srdejo.plazoleta.infrastructure.out.feign.adapter.EmployeeClientAdapter;
 import co.com.srdejo.plazoleta.infrastructure.out.feign.adapter.OwnerClientAdapter;
+import co.com.srdejo.plazoleta.infrastructure.out.feign.client.EmployeeClient;
 import co.com.srdejo.plazoleta.infrastructure.out.feign.client.OwnerClient;
 import co.com.srdejo.plazoleta.infrastructure.out.jpa.adapter.DishCategoryJpaAdapter;
 import co.com.srdejo.plazoleta.infrastructure.out.jpa.adapter.DishJpaAdapter;
@@ -38,6 +40,7 @@ public class BeanConfiguration {
     private final IDishEntityMapper dishEntityMapper;
     private final IDishCategoryEntityMapper dishCategoryEntityMapper;
     private final OwnerClient ownerClient;
+    private final EmployeeClient employeeClient;
     private final IOrderRepository orderRepository;
     private final IOrderEntityMapper  orderEntityMapper;
 
@@ -82,12 +85,17 @@ public class BeanConfiguration {
     }
 
     @Bean
+    public IEmployeeClientPort employeeClientPort() {
+        return new EmployeeClientAdapter(employeeClient);
+    }
+
+    @Bean
     public IOrderPersistencePort orderPersistencePort() {
         return new OrderJpaAdapter(orderRepository, orderEntityMapper);
     }
 
     @Bean
     public IOrderServicePort orderServicePort() {
-        return new OrderUseCase(orderPersistencePort(), authenticatedUserPort(), dishPersistencePort());
+        return new OrderUseCase(orderPersistencePort(), authenticatedUserPort(), dishPersistencePort(), employeeClientPort());
     }
 }

@@ -6,8 +6,11 @@ import co.com.srdejo.plazoleta.domain.exception.ErrorCodesEnum;
 import co.com.srdejo.plazoleta.domain.exception.InvalidOrderException;
 import co.com.srdejo.plazoleta.domain.model.OrderModel;
 import co.com.srdejo.plazoleta.domain.model.OrderStatus;
+import co.com.srdejo.plazoleta.domain.model.PageRequestModel;
+import co.com.srdejo.plazoleta.domain.model.PageResultModel;
 import co.com.srdejo.plazoleta.domain.spi.IAuthenticatedUserPort;
 import co.com.srdejo.plazoleta.domain.spi.IDishPersistencePort;
+import co.com.srdejo.plazoleta.domain.spi.IEmployeeClientPort;
 import co.com.srdejo.plazoleta.domain.spi.IOrderPersistencePort;
 
 import java.time.LocalDateTime;
@@ -19,15 +22,18 @@ public class OrderUseCase implements IOrderServicePort {
     private final IOrderPersistencePort orderPersistencePort;
     private final IAuthenticatedUserPort authenticatedUserPort;
     private final IDishPersistencePort dishPersistencePort;
+    private final IEmployeeClientPort employeeClientPort;
 
     public OrderUseCase(
             IOrderPersistencePort orderPersistencePort,
             IAuthenticatedUserPort authenticatedUserPort,
-            IDishPersistencePort dishPersistencePort
+            IDishPersistencePort dishPersistencePort,
+            IEmployeeClientPort employeeClientPort
     ) {
         this.orderPersistencePort = orderPersistencePort;
         this.authenticatedUserPort = authenticatedUserPort;
         this.dishPersistencePort = dishPersistencePort;
+        this.employeeClientPort = employeeClientPort;
     }
 
     @Override
@@ -39,6 +45,12 @@ public class OrderUseCase implements IOrderServicePort {
         orderModel.setOrderDate(LocalDateTime.now());
         orderModel.setStatus(OrderStatus.PENDING);
         return orderPersistencePort.saveOrder(orderModel);
+    }
+
+    @Override
+    public PageResultModel<OrderModel> getAllOrders(OrderStatus orderStatus, PageRequestModel pageRequestModel) {
+        Long restaurantId = employeeClientPort.getAuthenticatedEmployeeRestaurantId();
+        return orderPersistencePort.getAllOrders(orderStatus, pageRequestModel, restaurantId);
     }
 
     private void canGetOtherOrders(Long customerId) {

@@ -15,6 +15,7 @@ spring:
 feign-url:
   users: ${USER_URL:http://localhost:8081}/api/v1
   owners: ${feign-url.users}/owners
+  employees: ${feign-url.users}/users/employees
 
 jwt:
   secret: ${JWT_SECRET:una-clave-secreta-de-al-menos-32-bytes}

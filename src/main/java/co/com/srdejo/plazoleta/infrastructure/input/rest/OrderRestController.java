@@ -79,4 +79,21 @@ public class OrderRestController {
         orderHandler.takeOrder(orderId);
         return ResponseEntity.noContent().build();
     }
+
+    @Operation(
+            summary = "Mark an order as ready",
+            description = "Allows the authenticated chef to mark an order as ready for delivery."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Order successfully marked as ready", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Order not found", content = @Content),
+            @ApiResponse(responseCode = "409", description = "Order cannot be marked as ready because it is not in preparation", content = @Content),
+            @ApiResponse(responseCode = "403", description = "User is not authorized to mark orders as ready", content = @Content)
+    })
+    @PatchMapping("/{orderId}/ready")
+    @PreAuthorize("hasRole('EMPLOYEE')")
+    public ResponseEntity<Void> markOrderAsReady(@PathVariable Long orderId) {
+        orderHandler.markOrderAsReady(orderId);
+        return ResponseEntity.noContent().build();
+    }
 }

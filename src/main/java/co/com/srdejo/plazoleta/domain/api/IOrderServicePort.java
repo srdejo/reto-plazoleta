@@ -12,4 +12,6 @@ public interface IOrderServicePort {
     PageResult<OrderModel> getAllOrders(OrderStatus orderStatus, PageRequest pageRequest);
 
     void takeOrder(Long orderId);
+
+    void markOrderAsReady(Long orderId);
 }

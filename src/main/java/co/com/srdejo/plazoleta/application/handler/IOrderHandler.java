@@ -13,4 +13,6 @@ public interface IOrderHandler {
     PageResponseDto<FullOrderResponseDto> getAllOrders(int page, int size, OrderStatus orderStatus, boolean asc);
 
     void takeOrder(Long orderId);
+
+    void markOrderAsReady(Long orderId);
 }

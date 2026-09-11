@@ -40,6 +40,9 @@ public class OrderEntity {
     @Column(nullable = false, length = 20)
     private OrderStatus status;
 
+    @Column(length = 5)
+    private String pin;
+
     @OneToMany(
             mappedBy = "order",
             cascade = CascadeType.ALL,

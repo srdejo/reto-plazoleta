@@ -9,6 +9,7 @@ import co.com.srdejo.plazoleta.domain.model.OrderStatus;
 import co.com.srdejo.plazoleta.domain.spi.IAuthenticatedUserPort;
 import co.com.srdejo.plazoleta.domain.spi.IDishPersistencePort;
 import co.com.srdejo.plazoleta.domain.spi.IEmployeeClientPort;
+import co.com.srdejo.plazoleta.domain.spi.INotificationPort;
 import co.com.srdejo.plazoleta.domain.spi.IOrderPersistencePort;
 import co.com.srdejo.plazoleta.domain.utils.PageRequest;
 import co.com.srdejo.plazoleta.domain.utils.PageResult;
@@ -22,17 +23,20 @@ public class OrderUseCase implements IOrderServicePort {
     private final IAuthenticatedUserPort authenticatedUserPort;
     private final IDishPersistencePort dishPersistencePort;
     private final IEmployeeClientPort employeeClientPort;
+    private final INotificationPort notificationPort;
 
     public OrderUseCase(
             IOrderPersistencePort orderPersistencePort,
             IAuthenticatedUserPort authenticatedUserPort,
             IDishPersistencePort dishPersistencePort,
-            IEmployeeClientPort employeeClientPort
+            IEmployeeClientPort employeeClientPort,
+            INotificationPort notificationPort
     ) {
         this.orderPersistencePort = orderPersistencePort;
         this.authenticatedUserPort = authenticatedUserPort;
         this.dishPersistencePort = dishPersistencePort;
         this.employeeClientPort = employeeClientPort;
+        this.notificationPort = notificationPort;
     }
 
     @Override
@@ -59,6 +63,14 @@ public class OrderUseCase implements IOrderServicePort {
         orderModel.setChefId(authenticatedUserId);
         orderModel.setStatus(OrderStatus.IN_PREPARATION);
         orderPersistencePort.saveOrder(orderModel);
+    }
+
+    @Override
+    public void markOrderAsReady(Long orderId) {
+        OrderModel orderModel = orderPersistencePort.getOrder(orderId);
+        orderModel.markAsReady();
+        orderPersistencePort.saveOrder(orderModel);
+        notificationPort.notifyOrderReady(orderModel.getCustomerId(), orderId, orderModel.getPin());
     }
 
     private void canGetOtherOrders(Long customerId) {

@@ -10,6 +10,7 @@ import co.com.srdejo.plazoleta.domain.model.OrderStatus;
 import co.com.srdejo.plazoleta.domain.spi.IAuthenticatedUserPort;
 import co.com.srdejo.plazoleta.domain.spi.IDishPersistencePort;
 import co.com.srdejo.plazoleta.domain.spi.IEmployeeClientPort;
+import co.com.srdejo.plazoleta.domain.spi.INotificationPort;
 import co.com.srdejo.plazoleta.domain.spi.IOrderPersistencePort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -49,11 +50,14 @@ class OrderUseCaseTest {
     @Mock
     private IEmployeeClientPort employeeClientPort;
 
+    @Mock
+    private INotificationPort notificationPort;
+
     private OrderUseCase orderUseCase;
 
     @BeforeEach
     void setUp() {
-        orderUseCase = new OrderUseCase(orderPersistencePort, authenticatedUserPort, dishPersistencePort, employeeClientPort);
+        orderUseCase = new OrderUseCase(orderPersistencePort, authenticatedUserPort, dishPersistencePort, employeeClientPort, notificationPort);
         lenient().when(authenticatedUserPort.getAuthenticatedUserId()).thenReturn(CUSTOMER_ID);
         lenient().when(orderPersistencePort.hasOrder(any(), anyList())).thenReturn(false);
     }
@@ -151,5 +155,18 @@ class OrderUseCaseTest {
         verify(orderPersistencePort).getOrder(ORDER_ID);
         verifyNoInteractions(dishPersistencePort);
         verifyNoInteractions(employeeClientPort);
+    }
+
+    @Test
+    void markOrderAsReady_validOrder_setsStatusReadyAndNotifiesCustomer() {
+        OrderModel order = orderModel(List.of(new OrderItemModel(null, 1L, 1)));
+        order.setCustomerId(CUSTOMER_ID);
+        when(orderPersistencePort.getOrder(ORDER_ID)).thenReturn(order);
+
+        orderUseCase.markOrderAsReady(ORDER_ID);
+
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.READY);
+        verify(orderPersistencePort).saveOrder(order);
+        verify(notificationPort).notifyOrderReady(CUSTOMER_ID, ORDER_ID, order.getPin());
     }
 }

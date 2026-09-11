@@ -16,6 +16,8 @@ feign-url:
   users: ${USER_URL:http://localhost:8081}/api/v1
   owners: ${feign-url.users}/owners
   employees: ${feign-url.users}/users/employees
+  customers: ${feign-url.users}/users
+  mensajeria: ${MENSAJERIA_URL:http://localhost:8083}/api/v1/notifications
 
 jwt:
   secret: ${JWT_SECRET:una-clave-secreta-de-al-menos-32-bytes}

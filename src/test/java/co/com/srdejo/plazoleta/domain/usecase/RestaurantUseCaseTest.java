@@ -2,8 +2,8 @@ package co.com.srdejo.plazoleta.domain.usecase;
 
 import co.com.srdejo.plazoleta.domain.exception.ErrorCodesEnum;
 import co.com.srdejo.plazoleta.domain.exception.InvalidOwnerException;
-import co.com.srdejo.plazoleta.domain.model.PageRequestModel;
-import co.com.srdejo.plazoleta.domain.model.PageResultModel;
+import co.com.srdejo.plazoleta.domain.utils.PageRequest;
+import co.com.srdejo.plazoleta.domain.utils.PageResult;
 import co.com.srdejo.plazoleta.domain.model.RestaurantModel;
 import co.com.srdejo.plazoleta.domain.spi.IOwnerClientPort;
 import co.com.srdejo.plazoleta.domain.spi.IRestaurantPersistencePort;
@@ -66,12 +66,12 @@ class RestaurantUseCaseTest {
     @Test
     void getAllRestaurants_delegatesToPersistencePort() {
         List<RestaurantModel> restaurants = List.of(restaurantModel());
-        PageRequestModel pageRequestModel = new PageRequestModel(0, 10, true);
-        PageResultModel<RestaurantModel> pageResultModel = new PageResultModel<>(restaurants, 0, 10, 1, 1);
-        when(restaurantPersistencePort.getAllRestaurants(pageRequestModel)).thenReturn(pageResultModel);
+        PageRequest pageRequest = new PageRequest(0, 10, true);
+        PageResult<RestaurantModel> pageResult = new PageResult<>(restaurants, 0, 10, 1, 1);
+        when(restaurantPersistencePort.getAllRestaurants(pageRequest)).thenReturn(pageResult);
 
-        PageResultModel<RestaurantModel> result = restaurantUseCase.getAllRestaurants(pageRequestModel);
+        PageResult<RestaurantModel> result = restaurantUseCase.getAllRestaurants(pageRequest);
 
-        assertThat(result).isEqualTo(pageResultModel);
+        assertThat(result).isEqualTo(pageResult);
     }
 }

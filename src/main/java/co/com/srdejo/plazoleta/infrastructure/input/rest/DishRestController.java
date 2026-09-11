@@ -94,7 +94,7 @@ public class DishRestController {
     @PatchMapping("/{id}/status")
     public ResponseEntity<DishResponseDto> updateDishStatus(
             @PathVariable Long id,
-            @RequestParam boolean enabled) {
+            @RequestParam Boolean enabled) { // Not used primitive class  and validate null
 
         return ResponseEntity.ok(dishHandler.updateDishStatus(id, enabled));
     }

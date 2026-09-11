@@ -1,8 +1,8 @@
 package co.com.srdejo.plazoleta.domain.api;
 
 import co.com.srdejo.plazoleta.domain.model.DishModel;
-import co.com.srdejo.plazoleta.domain.model.PageRequestModel;
-import co.com.srdejo.plazoleta.domain.model.PageResultModel;
+import co.com.srdejo.plazoleta.domain.utils.PageRequest;
+import co.com.srdejo.plazoleta.domain.utils.PageResult;
 
 public interface IDishServicePort {
 
@@ -12,5 +12,5 @@ public interface IDishServicePort {
 
     DishModel updateDishStatus(Long id, boolean enabled);
 
-    PageResultModel<DishModel> getAllDishes(Long categoryId, PageRequestModel pageRequestModel);
+    PageResult<DishModel> getAllDishes(Long categoryId, PageRequest pageRequest);
 }

@@ -1,7 +1,7 @@
 package co.com.srdejo.plazoleta.infrastructure.out.jpa.adapter;
 
-import co.com.srdejo.plazoleta.domain.model.PageRequestModel;
-import co.com.srdejo.plazoleta.domain.model.PageResultModel;
+import co.com.srdejo.plazoleta.domain.utils.PageRequest;
+import co.com.srdejo.plazoleta.domain.utils.PageResult;
 import co.com.srdejo.plazoleta.domain.model.RestaurantModel;
 import co.com.srdejo.plazoleta.domain.spi.IRestaurantPersistencePort;
 import co.com.srdejo.plazoleta.infrastructure.exception.NoDataFoundException;
@@ -10,7 +10,6 @@ import co.com.srdejo.plazoleta.infrastructure.out.jpa.mapper.IRestaurantEntityMa
 import co.com.srdejo.plazoleta.infrastructure.out.jpa.repository.IRestaurantRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
@@ -28,16 +27,16 @@ public class RestaurantJpaAdapter implements IRestaurantPersistencePort {
     }
 
     @Override
-    public PageResultModel<RestaurantModel> getAllRestaurants(PageRequestModel pageRequestModel) {
-        Sort sort = Sort.by(pageRequestModel.ascending() ? Sort.Direction.ASC : Sort.Direction.DESC, "name");
-        Pageable pageable = PageRequest.of(pageRequestModel.page(), pageRequestModel.size(), sort);
+    public PageResult<RestaurantModel> getAllRestaurants(PageRequest pageRequest) {
+        Sort sort = Sort.by(pageRequest.ascending() ? Sort.Direction.ASC : Sort.Direction.DESC, "name");
+        Pageable pageable = org.springframework.data.domain.PageRequest.of(pageRequest.page(), pageRequest.size(), sort);
 
         Page<RestaurantEntity> entityPage = restaurantRepository.findAll(pageable);
         if (entityPage.isEmpty()) {
             throw new NoDataFoundException();
         }
 
-        return new PageResultModel<>(
+        return new PageResult<>(
                 restaurantEntityMapper.toRestaurantModelList(entityPage.getContent()),
                 entityPage.getNumber(),
                 entityPage.getSize(),

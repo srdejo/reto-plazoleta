@@ -6,16 +6,15 @@ import co.com.srdejo.plazoleta.domain.exception.ErrorCodesEnum;
 import co.com.srdejo.plazoleta.domain.exception.InvalidOrderException;
 import co.com.srdejo.plazoleta.domain.model.OrderModel;
 import co.com.srdejo.plazoleta.domain.model.OrderStatus;
-import co.com.srdejo.plazoleta.domain.model.PageRequestModel;
-import co.com.srdejo.plazoleta.domain.model.PageResultModel;
 import co.com.srdejo.plazoleta.domain.spi.IAuthenticatedUserPort;
 import co.com.srdejo.plazoleta.domain.spi.IDishPersistencePort;
 import co.com.srdejo.plazoleta.domain.spi.IEmployeeClientPort;
 import co.com.srdejo.plazoleta.domain.spi.IOrderPersistencePort;
+import co.com.srdejo.plazoleta.domain.utils.PageRequest;
+import co.com.srdejo.plazoleta.domain.utils.PageResult;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.time.ZoneId;
 
 public class OrderUseCase implements IOrderServicePort {
 
@@ -42,23 +41,19 @@ public class OrderUseCase implements IOrderServicePort {
         canGetOtherOrders(authenticatedUserId);
         validateItemsBelongToSameRestaurant(orderModel);
         orderModel.setCustomerId(authenticatedUserId);
-        orderModel.setOrderDate(LocalDateTime.now());
+        orderModel.setOrderDate(LocalDateTime.now(ZoneId.of("America/Bogota")));
         orderModel.setStatus(OrderStatus.PENDING);
         return orderPersistencePort.saveOrder(orderModel);
     }
 
     @Override
-    public PageResultModel<OrderModel> getAllOrders(OrderStatus orderStatus, PageRequestModel pageRequestModel) {
+    public PageResult<OrderModel> getAllOrders(OrderStatus orderStatus, PageRequest pageRequest) {
         Long restaurantId = employeeClientPort.getAuthenticatedEmployeeRestaurantId();
-        return orderPersistencePort.getAllOrders(orderStatus, pageRequestModel, restaurantId);
+        return orderPersistencePort.getAllOrders(orderStatus, pageRequest, restaurantId);
     }
 
     private void canGetOtherOrders(Long customerId) {
-        List<OrderStatus> orderStatuses = new ArrayList<>();
-        orderStatuses.add(OrderStatus.PENDING);
-        orderStatuses.add(OrderStatus.IN_PREPARATION);
-        orderStatuses.add(OrderStatus.READY);
-        if ( orderPersistencePort.hasOrder(customerId, orderStatuses) ) {
+        if ( orderPersistencePort.hasOrder(customerId, OrderStatus.ACTIVE.stream().toList()) ) {
             throw new ActiveOrderExistsException(ErrorCodesEnum.ACTIVE_ORDER_EXISTS);
         }
     }

@@ -9,6 +9,8 @@ import co.com.srdejo.plazoleta.application.mapper.IOrderRequestMapper;
 import co.com.srdejo.plazoleta.application.mapper.IOrderResponseMapper;
 import co.com.srdejo.plazoleta.domain.api.IOrderServicePort;
 import co.com.srdejo.plazoleta.domain.model.*;
+import co.com.srdejo.plazoleta.domain.utils.PageRequest;
+import co.com.srdejo.plazoleta.domain.utils.PageResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,13 +32,13 @@ public class OrderHandler implements IOrderHandler {
 
     @Override
     public PageResponseDto<FullOrderResponseDto> getAllOrders(int page, int size, OrderStatus orderStatus, boolean ascending) {
-        PageRequestModel pageRequestModel = new PageRequestModel(page, size, ascending);
-        PageResultModel<OrderModel> pageResultModel = orderServicePort.getAllOrders(orderStatus, pageRequestModel);
+        PageRequest pageRequest = new PageRequest(page, size, ascending);
+        PageResult<OrderModel> pageResult = orderServicePort.getAllOrders(orderStatus, pageRequest);
         return new PageResponseDto<>(
-                orderResponseMapper.toResponseList(pageResultModel.content()),
-                pageResultModel.page(),
-                pageResultModel.size(),
-                pageResultModel.totalElements(),
-                pageResultModel.totalPages());
+                orderResponseMapper.toResponseList(pageResult.content()),
+                pageResult.page(),
+                pageResult.size(),
+                pageResult.totalElements(),
+                pageResult.totalPages());
     }
 }

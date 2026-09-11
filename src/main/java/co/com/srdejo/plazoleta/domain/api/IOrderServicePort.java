@@ -10,4 +10,6 @@ public interface IOrderServicePort {
     OrderModel saveOrder(OrderModel orderModel);
 
     PageResult<OrderModel> getAllOrders(OrderStatus orderStatus, PageRequest pageRequest);
+
+    void takeOrder(Long orderId);
 }

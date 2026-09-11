@@ -41,4 +41,9 @@ public class OrderHandler implements IOrderHandler {
                 pageResult.totalElements(),
                 pageResult.totalPages());
     }
+
+    @Override
+    public void takeOrder(Long orderId) {
+        orderServicePort.takeOrder(orderId);
+    }
 }

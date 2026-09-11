@@ -11,4 +11,6 @@ public interface IOrderHandler {
     OrderResponseDto createOrder(OrderRequestDto orderRequestDto);
 
     PageResponseDto<FullOrderResponseDto> getAllOrders(int page, int size, OrderStatus orderStatus, boolean asc);
+
+    void takeOrder(Long orderId);
 }

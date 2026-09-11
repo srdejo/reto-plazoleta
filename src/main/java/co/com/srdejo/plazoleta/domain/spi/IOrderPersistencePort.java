@@ -13,4 +13,6 @@ public interface IOrderPersistencePort {
     boolean hasOrder(Long customerId, List<OrderStatus> orderStatuses);
 
     PageResult<OrderModel> getAllOrders(OrderStatus orderStatus, PageRequest pageRequest, Long restaurantId);
+
+    OrderModel getOrder(Long orderId);
 }

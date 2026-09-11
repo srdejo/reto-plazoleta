@@ -34,6 +34,8 @@ class OrderUseCaseTest {
 
     private static final Long CUSTOMER_ID = 20L;
     private static final Long RESTAURANT_ID = 1L;
+    private static final Long CHEF_ID = 30L;
+    private static final Long ORDER_ID = 100L;
 
     @Mock
     private IOrderPersistencePort orderPersistencePort;
@@ -122,5 +124,32 @@ class OrderUseCaseTest {
                         .isEqualTo(ErrorCodesEnum.DISHES_DIFFERENT_RESTAURANT));
 
         verify(orderPersistencePort, never()).saveOrder(any());
+    }
+
+    @Test
+    void takeOrder_validOrder_assignsChefAndSetsStatusInPreparation() {
+        OrderModel order = orderModel(List.of(new OrderItemModel(null, 1L, 1)));
+        order.setStatus(OrderStatus.PENDING);
+        when(orderPersistencePort.getOrder(ORDER_ID)).thenReturn(order);
+        when(authenticatedUserPort.getAuthenticatedUserId()).thenReturn(CHEF_ID);
+
+        orderUseCase.takeOrder(ORDER_ID);
+
+        assertThat(order.getChefId()).isEqualTo(CHEF_ID);
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.IN_PREPARATION);
+        verify(orderPersistencePort).saveOrder(order);
+    }
+
+    @Test
+    void takeOrder_validOrder_fetchesOrderByIdBeforeSaving() {
+        OrderModel order = orderModel(List.of(new OrderItemModel(null, 1L, 1)));
+        when(orderPersistencePort.getOrder(ORDER_ID)).thenReturn(order);
+        when(authenticatedUserPort.getAuthenticatedUserId()).thenReturn(CHEF_ID);
+
+        orderUseCase.takeOrder(ORDER_ID);
+
+        verify(orderPersistencePort).getOrder(ORDER_ID);
+        verifyNoInteractions(dishPersistencePort);
+        verifyNoInteractions(employeeClientPort);
     }
 }

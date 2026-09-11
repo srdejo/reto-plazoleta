@@ -62,4 +62,21 @@ public class OrderRestController {
     ) {
         return ResponseEntity.ok(orderHandler.getAllOrders(page, size, orderStatus, "asc".equalsIgnoreCase(direction)));
     }
+
+    @Operation(
+            summary = "Take an order",
+            description = "Allows the authenticated chef to take an available order for preparation."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Order successfully taken", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Order not found", content = @Content),
+            @ApiResponse(responseCode = "409", description = "Order cannot be taken because it is already assigned or is not available", content = @Content),
+            @ApiResponse(responseCode = "403", description = "User is not authorized to take orders", content = @Content)
+    })
+    @PostMapping("/{orderId}/take")
+    @PreAuthorize("hasRole('EMPLOYEE')")
+    public ResponseEntity<Void> takeOrder(@PathVariable Long orderId) {
+        orderHandler.takeOrder(orderId);
+        return ResponseEntity.noContent().build();
+    }
 }

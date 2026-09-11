@@ -52,6 +52,15 @@ public class OrderUseCase implements IOrderServicePort {
         return orderPersistencePort.getAllOrders(orderStatus, pageRequest, restaurantId);
     }
 
+    @Override
+    public void takeOrder(Long orderId) {
+        Long authenticatedUserId = authenticatedUserPort.getAuthenticatedUserId();
+        OrderModel orderModel = orderPersistencePort.getOrder(orderId);
+        orderModel.setChefId(authenticatedUserId);
+        orderModel.setStatus(OrderStatus.IN_PREPARATION);
+        orderPersistencePort.saveOrder(orderModel);
+    }
+
     private void canGetOtherOrders(Long customerId) {
         if ( orderPersistencePort.hasOrder(customerId, OrderStatus.ACTIVE.stream().toList()) ) {
             throw new ActiveOrderExistsException(ErrorCodesEnum.ACTIVE_ORDER_EXISTS);

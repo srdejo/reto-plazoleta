@@ -9,6 +9,7 @@ import co.com.srdejo.plazoleta.domain.model.OrderModel;
 import co.com.srdejo.plazoleta.domain.model.OrderStatus;
 import co.com.srdejo.plazoleta.domain.spi.IAuthenticatedUserPort;
 import co.com.srdejo.plazoleta.domain.spi.IDishPersistencePort;
+import co.com.srdejo.plazoleta.domain.spi.IEmployeeClientPort;
 import co.com.srdejo.plazoleta.domain.spi.IOrderPersistencePort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,11 +44,14 @@ class OrderUseCaseTest {
     @Mock
     private IDishPersistencePort dishPersistencePort;
 
+    @Mock
+    private IEmployeeClientPort employeeClientPort;
+
     private OrderUseCase orderUseCase;
 
     @BeforeEach
     void setUp() {
-        orderUseCase = new OrderUseCase(orderPersistencePort, authenticatedUserPort, dishPersistencePort);
+        orderUseCase = new OrderUseCase(orderPersistencePort, authenticatedUserPort, dishPersistencePort, employeeClientPort);
         lenient().when(authenticatedUserPort.getAuthenticatedUserId()).thenReturn(CUSTOMER_ID);
         lenient().when(orderPersistencePort.hasOrder(any(), anyList())).thenReturn(false);
     }

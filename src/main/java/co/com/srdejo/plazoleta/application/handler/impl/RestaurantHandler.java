@@ -8,8 +8,8 @@ import co.com.srdejo.plazoleta.application.handler.IRestaurantHandler;
 import co.com.srdejo.plazoleta.application.mapper.IRestaurantRequestMapper;
 import co.com.srdejo.plazoleta.application.mapper.IRestaurantResponseMapper;
 import co.com.srdejo.plazoleta.domain.api.IRestaurantServicePort;
-import co.com.srdejo.plazoleta.domain.model.PageRequestModel;
-import co.com.srdejo.plazoleta.domain.model.PageResultModel;
+import co.com.srdejo.plazoleta.domain.utils.PageRequest;
+import co.com.srdejo.plazoleta.domain.utils.PageResult;
 import co.com.srdejo.plazoleta.domain.model.RestaurantModel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -32,14 +32,14 @@ public class RestaurantHandler implements IRestaurantHandler {
 
     @Override
     public PageResponseDto<RestaurantNameAndLogoResponseDto> getAllRestaurants(int page, int size, boolean ascending) {
-        PageRequestModel pageRequestModel = new PageRequestModel(page, size, ascending);
-        PageResultModel<RestaurantModel> pageResultModel = restaurantServicePort.getAllRestaurants(pageRequestModel);
+        PageRequest pageRequest = new PageRequest(page, size, ascending);
+        PageResult<RestaurantModel> pageResult = restaurantServicePort.getAllRestaurants(pageRequest);
         return new PageResponseDto<>(
-                restaurantResponseMapper.toNameAndLogoResponseDtoList(pageResultModel.content()),
-                pageResultModel.page(),
-                pageResultModel.size(),
-                pageResultModel.totalElements(),
-                pageResultModel.totalPages());
+                restaurantResponseMapper.toNameAndLogoResponseDtoList(pageResult.content()),
+                pageResult.page(),
+                pageResult.size(),
+                pageResult.totalElements(),
+                pageResult.totalPages());
     }
 
     @Override

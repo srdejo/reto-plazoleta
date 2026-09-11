@@ -6,8 +6,8 @@ import co.com.srdejo.plazoleta.domain.exception.InvalidDishCategoryException;
 import co.com.srdejo.plazoleta.domain.exception.InvalidOwnerException;
 import co.com.srdejo.plazoleta.domain.exception.UnauthorizedException;
 import co.com.srdejo.plazoleta.domain.model.DishModel;
-import co.com.srdejo.plazoleta.domain.model.PageRequestModel;
-import co.com.srdejo.plazoleta.domain.model.PageResultModel;
+import co.com.srdejo.plazoleta.domain.utils.PageRequest;
+import co.com.srdejo.plazoleta.domain.utils.PageResult;
 import co.com.srdejo.plazoleta.domain.model.RestaurantModel;
 import co.com.srdejo.plazoleta.domain.spi.IAuthenticatedUserPort;
 import co.com.srdejo.plazoleta.domain.spi.IDishCategoryPersistencePort;
@@ -67,8 +67,8 @@ public class DishUseCase implements IDishServicePort {
     }
 
     @Override
-    public PageResultModel<DishModel> getAllDishes(Long categoryId, PageRequestModel pageRequestModel) {
-        return dishPersistencePort.getAllDishes(categoryId, pageRequestModel);
+    public PageResult<DishModel> getAllDishes(Long categoryId, PageRequest pageRequest) {
+        return dishPersistencePort.getAllDishes(categoryId, pageRequest);
     }
 
     private void validateOwner(Long ownerId, DishModel dishModel) {

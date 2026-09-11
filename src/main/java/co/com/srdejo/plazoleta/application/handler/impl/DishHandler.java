@@ -9,8 +9,8 @@ import co.com.srdejo.plazoleta.application.mapper.IDishRequestMapper;
 import co.com.srdejo.plazoleta.application.mapper.IDishResponseMapper;
 import co.com.srdejo.plazoleta.domain.api.IDishServicePort;
 import co.com.srdejo.plazoleta.domain.model.DishModel;
-import co.com.srdejo.plazoleta.domain.model.PageRequestModel;
-import co.com.srdejo.plazoleta.domain.model.PageResultModel;
+import co.com.srdejo.plazoleta.domain.utils.PageRequest;
+import co.com.srdejo.plazoleta.domain.utils.PageResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,13 +45,13 @@ public class DishHandler implements IDishHandler {
 
     @Override
     public PageResponseDto<DishResponseDto> getAllDishes(int page, int size, Long categoryId, boolean ascending) {
-        PageRequestModel pageRequestModel = new PageRequestModel(page, size, ascending);
-        PageResultModel<DishModel> pageResultModel = dishServicePort.getAllDishes(categoryId,pageRequestModel);
+        PageRequest pageRequest = new PageRequest(page, size, ascending);
+        PageResult<DishModel> pageResult = dishServicePort.getAllDishes(categoryId, pageRequest);
         return new PageResponseDto<>(
-                dishResponseMapper.toResponseList(pageResultModel.content()),
-                pageResultModel.page(),
-                pageResultModel.size(),
-                pageResultModel.totalElements(),
-                pageResultModel.totalPages());
+                dishResponseMapper.toResponseList(pageResult.content()),
+                pageResult.page(),
+                pageResult.size(),
+                pageResult.totalElements(),
+                pageResult.totalPages());
     }
 }

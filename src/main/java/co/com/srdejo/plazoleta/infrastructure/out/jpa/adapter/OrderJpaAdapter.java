@@ -2,8 +2,8 @@ package co.com.srdejo.plazoleta.infrastructure.out.jpa.adapter;
 
 import co.com.srdejo.plazoleta.domain.model.OrderModel;
 import co.com.srdejo.plazoleta.domain.model.OrderStatus;
-import co.com.srdejo.plazoleta.domain.model.PageRequestModel;
-import co.com.srdejo.plazoleta.domain.model.PageResultModel;
+import co.com.srdejo.plazoleta.domain.utils.PageRequest;
+import co.com.srdejo.plazoleta.domain.utils.PageResult;
 import co.com.srdejo.plazoleta.domain.spi.IOrderPersistencePort;
 import co.com.srdejo.plazoleta.infrastructure.exception.NoDataFoundException;
 import co.com.srdejo.plazoleta.infrastructure.out.jpa.entity.OrderEntity;
@@ -11,7 +11,6 @@ import co.com.srdejo.plazoleta.infrastructure.out.jpa.mapper.IOrderEntityMapper;
 import co.com.srdejo.plazoleta.infrastructure.out.jpa.repository.IOrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
@@ -37,9 +36,9 @@ public class OrderJpaAdapter implements IOrderPersistencePort {
     }
 
     @Override
-    public PageResultModel<OrderModel> getAllOrders(OrderStatus orderStatus, PageRequestModel pageRequestModel, Long restaurantId) {
-        Sort sort = Sort.by(pageRequestModel.ascending() ? Sort.Direction.ASC : Sort.Direction.DESC, "orderDate");
-        Pageable pageable = PageRequest.of(pageRequestModel.page(), pageRequestModel.size(), sort);
+    public PageResult<OrderModel> getAllOrders(OrderStatus orderStatus, PageRequest pageRequest, Long restaurantId) {
+        Sort sort = Sort.by(pageRequest.ascending() ? Sort.Direction.ASC : Sort.Direction.DESC, "orderDate");
+        Pageable pageable = org.springframework.data.domain.PageRequest.of(pageRequest.page(), pageRequest.size(), sort);
 
         Page<OrderEntity> entityPage = orderStatus == null
                 ? orderRepository.findAllByRestaurantId(restaurantId, pageable)
@@ -48,7 +47,7 @@ public class OrderJpaAdapter implements IOrderPersistencePort {
             throw new NoDataFoundException();
         }
 
-        return new PageResultModel<>(
+        return new PageResult<>(
                 orderEntityMapper.toOrderModelList(entityPage.getContent()),
                 entityPage.getNumber(),
                 entityPage.getSize(),

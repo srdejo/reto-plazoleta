@@ -1,15 +1,13 @@
 package co.com.srdejo.plazoleta.domain.spi;
 
 import co.com.srdejo.plazoleta.domain.model.DishModel;
-import co.com.srdejo.plazoleta.domain.model.PageRequestModel;
-import co.com.srdejo.plazoleta.domain.model.PageResultModel;
-
-import java.util.List;
+import co.com.srdejo.plazoleta.domain.utils.PageRequest;
+import co.com.srdejo.plazoleta.domain.utils.PageResult;
 
 public interface IDishPersistencePort {
     DishModel saveDish(DishModel restaurantModel);
 
     DishModel findById(Long id);
 
-    PageResultModel<DishModel> getAllDishes(Long categoryId, PageRequestModel pageRequestModel);
+    PageResult<DishModel> getAllDishes(Long categoryId, PageRequest pageRequest);
 }

@@ -16,7 +16,9 @@ public enum ErrorCodesEnum {
     SERVICE_UNAVAILABLE("HTTP1", "El servicio %s no responde"),
     FORBIDDEN_ROLE("AUTH2", "Tu rol no tiene permisos para realizar esta accion"),
     MISSING_OR_INVALID_TOKEN("AUTH3", "Token de autenticacion ausente o invalido"),
-    EMPLOYEE_NOT_FOUND("ERR06", "El empleado autenticado no existe o no tiene un restaurante asignado");
+    EMPLOYEE_NOT_FOUND("ERR06", "El empleado autenticado no existe o no tiene un restaurante asignado"),
+    NOT_YET_READY_EXCEPTION("ERR07", "El pedido aun no esta listo para marcarse como entregado"),
+    INVALID_PIN_EXCEPTION("ERR08", "El pin es incorrecto");
 
     private final String code;
     private final String description;

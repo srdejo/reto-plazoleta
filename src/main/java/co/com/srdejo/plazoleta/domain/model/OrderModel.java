@@ -1,5 +1,6 @@
 package co.com.srdejo.plazoleta.domain.model;
 
+import co.com.srdejo.plazoleta.domain.exception.InvalidOrderPinException;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -7,7 +8,12 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
+
+import co.com.srdejo.plazoleta.domain.exception.NotYetReadyOrderException;
+
+import static co.com.srdejo.plazoleta.domain.exception.ErrorCodesEnum.*;
 
 @Getter
 @Setter
@@ -42,4 +48,15 @@ public class OrderModel {
         this.pin = String.valueOf(ThreadLocalRandom.current().nextInt(10000, 100000));
     }
 
+    public void markAsDelivered(String pin) {
+        if (this.status != OrderStatus.READY) {
+            throw new NotYetReadyOrderException(NOT_YET_READY_EXCEPTION);
+        }
+
+        if (!Objects.equals(this.pin, pin)) {
+            throw new InvalidOrderPinException(INVALID_PIN_EXCEPTION);
+        }
+
+        this.status = OrderStatus.DELIVERED;
+    }
 }

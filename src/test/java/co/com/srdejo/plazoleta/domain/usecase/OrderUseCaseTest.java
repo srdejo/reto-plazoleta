@@ -3,6 +3,8 @@ package co.com.srdejo.plazoleta.domain.usecase;
 import co.com.srdejo.plazoleta.domain.exception.ActiveOrderExistsException;
 import co.com.srdejo.plazoleta.domain.exception.ErrorCodesEnum;
 import co.com.srdejo.plazoleta.domain.exception.InvalidOrderException;
+import co.com.srdejo.plazoleta.domain.exception.InvalidOrderPinException;
+import co.com.srdejo.plazoleta.domain.exception.NotYetReadyOrderException;
 import co.com.srdejo.plazoleta.domain.model.DishModel;
 import co.com.srdejo.plazoleta.domain.model.OrderItemModel;
 import co.com.srdejo.plazoleta.domain.model.OrderModel;
@@ -168,5 +170,57 @@ class OrderUseCaseTest {
         assertThat(order.getStatus()).isEqualTo(OrderStatus.READY);
         verify(orderPersistencePort).saveOrder(order);
         verify(notificationPort).notifyOrderReady(CUSTOMER_ID, ORDER_ID, order.getPin());
+    }
+
+    @Test
+    void markOrderAsDelivered_correctPinAndReadyOrder_setsStatusDelivered() {
+        // given
+        OrderModel order = orderModel(List.of(new OrderItemModel(null, 1L, 1)));
+        order.markAsReady();
+        String correctPin = order.getPin();
+        when(orderPersistencePort.getOrder(ORDER_ID)).thenReturn(order);
+
+        // when
+        orderUseCase.markOrderAsDelivered(ORDER_ID, correctPin);
+
+        // then
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.DELIVERED);
+        verify(orderPersistencePort).saveOrder(order);
+    }
+
+    @Test
+    void markOrderAsDelivered_incorrectPin_throwsInvalidOrderPinException() {
+        // given
+        OrderModel order = orderModel(List.of(new OrderItemModel(null, 1L, 1)));
+        order.markAsReady();
+        when(orderPersistencePort.getOrder(ORDER_ID)).thenReturn(order);
+
+        // when
+        assertThatThrownBy(() -> orderUseCase.markOrderAsDelivered(ORDER_ID, "wrong-pin"))
+                // then
+                .isInstanceOf(InvalidOrderPinException.class)
+                .satisfies(ex -> assertThat(((InvalidOrderPinException) ex).getError())
+                        .isEqualTo(ErrorCodesEnum.INVALID_PIN_EXCEPTION));
+
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.READY);
+        verify(orderPersistencePort, never()).saveOrder(any());
+    }
+
+    @Test
+    void markOrderAsDelivered_orderNotReady_throwsNotYetReadyOrderException() {
+        // given
+        OrderModel order = orderModel(List.of(new OrderItemModel(null, 1L, 1)));
+        order.setStatus(OrderStatus.IN_PREPARATION);
+        when(orderPersistencePort.getOrder(ORDER_ID)).thenReturn(order);
+
+        // when
+        assertThatThrownBy(() -> orderUseCase.markOrderAsDelivered(ORDER_ID, "12345"))
+                // then
+                .isInstanceOf(NotYetReadyOrderException.class)
+                .satisfies(ex -> assertThat(((NotYetReadyOrderException) ex).getError())
+                        .isEqualTo(ErrorCodesEnum.NOT_YET_READY_EXCEPTION));
+
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.IN_PREPARATION);
+        verify(orderPersistencePort, never()).saveOrder(any());
     }
 }

@@ -1,5 +1,6 @@
 package co.com.srdejo.plazoleta.infrastructure.input.rest;
 
+import co.com.srdejo.plazoleta.application.dto.request.OrderPinRequestDto;
 import co.com.srdejo.plazoleta.application.dto.request.OrderRequestDto;
 import co.com.srdejo.plazoleta.application.dto.response.DishResponseDto;
 import co.com.srdejo.plazoleta.application.dto.response.FullOrderResponseDto;
@@ -94,6 +95,23 @@ public class OrderRestController {
     @PreAuthorize("hasRole('EMPLOYEE')")
     public ResponseEntity<Void> markOrderAsReady(@PathVariable Long orderId) {
         orderHandler.markOrderAsReady(orderId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(
+            summary = "Mark an order as delivered",
+            description = "Allows the authenticated employee to mark an order as delivered."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Order successfully marked as delivered", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Order not found", content = @Content),
+            @ApiResponse(responseCode = "409", description = "Order cannot be marked as ready because it is not ready", content = @Content),
+            @ApiResponse(responseCode = "403", description = "User is not authorized to mark orders as ready", content = @Content)
+    })
+    @PatchMapping("/{orderId}/delivered")
+    @PreAuthorize("hasRole('EMPLOYEE')")
+    public ResponseEntity<Void> markOrderAsDelivered(@PathVariable Long orderId, @RequestBody OrderPinRequestDto orderPinRequestDto) {
+        orderHandler.markOrderAsDelivered(orderId, orderPinRequestDto.pin());
         return ResponseEntity.noContent().build();
     }
 }

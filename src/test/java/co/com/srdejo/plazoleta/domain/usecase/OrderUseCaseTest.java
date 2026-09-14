@@ -5,6 +5,7 @@ import co.com.srdejo.plazoleta.domain.exception.ErrorCodesEnum;
 import co.com.srdejo.plazoleta.domain.exception.InvalidOrderException;
 import co.com.srdejo.plazoleta.domain.exception.InvalidOrderPinException;
 import co.com.srdejo.plazoleta.domain.exception.NotYetReadyOrderException;
+import co.com.srdejo.plazoleta.domain.exception.OrderCannotBeCancelledException;
 import co.com.srdejo.plazoleta.domain.model.DishModel;
 import co.com.srdejo.plazoleta.domain.model.OrderItemModel;
 import co.com.srdejo.plazoleta.domain.model.OrderModel;
@@ -219,6 +220,39 @@ class OrderUseCaseTest {
                 .isInstanceOf(NotYetReadyOrderException.class)
                 .satisfies(ex -> assertThat(((NotYetReadyOrderException) ex).getError())
                         .isEqualTo(ErrorCodesEnum.NOT_YET_READY_EXCEPTION));
+
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.IN_PREPARATION);
+        verify(orderPersistencePort, never()).saveOrder(any());
+    }
+
+    @Test
+    void cancelOrder_pendingOrder_setsStatusCancelled() {
+        // given
+        OrderModel order = orderModel(List.of(new OrderItemModel(null, 1L, 1)));
+        order.setStatus(OrderStatus.PENDING);
+        when(orderPersistencePort.getOrder(ORDER_ID)).thenReturn(order);
+
+        // when
+        orderUseCase.cancelOrder(ORDER_ID);
+
+        // then
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.CANCELLED);
+        verify(orderPersistencePort).saveOrder(order);
+    }
+
+    @Test
+    void cancelOrder_orderNotPending_throwsOrderCannotBeCancelledException() {
+        // given
+        OrderModel order = orderModel(List.of(new OrderItemModel(null, 1L, 1)));
+        order.setStatus(OrderStatus.IN_PREPARATION);
+        when(orderPersistencePort.getOrder(ORDER_ID)).thenReturn(order);
+
+        // when
+        assertThatThrownBy(() -> orderUseCase.cancelOrder(ORDER_ID))
+                // then
+                .isInstanceOf(OrderCannotBeCancelledException.class)
+                .satisfies(ex -> assertThat(((OrderCannotBeCancelledException) ex).getError())
+                        .isEqualTo(ErrorCodesEnum.ORDER_CANNOT_BE_CANCELLED));
 
         assertThat(order.getStatus()).isEqualTo(OrderStatus.IN_PREPARATION);
         verify(orderPersistencePort, never()).saveOrder(any());

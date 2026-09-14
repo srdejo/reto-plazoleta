@@ -80,6 +80,13 @@ public class OrderUseCase implements IOrderServicePort {
         orderPersistencePort.saveOrder(orderModel);
     }
 
+    @Override
+    public void cancelOrder(Long orderId) {
+        OrderModel orderModel = orderPersistencePort.getOrder(orderId);
+        orderModel.cancelOrder();
+        orderPersistencePort.saveOrder(orderModel);
+    }
+
     private void canGetOtherOrders(Long customerId) {
         if ( orderPersistencePort.hasOrder(customerId, OrderStatus.ACTIVE.stream().toList()) ) {
             throw new ActiveOrderExistsException(ErrorCodesEnum.ACTIVE_ORDER_EXISTS);

@@ -6,7 +6,8 @@ public enum OrderStatus {
     PENDING,
     IN_PREPARATION,
     READY,
-    DELIVERED;
+    DELIVERED,
+    CANCELLED;
 
     public static final List<OrderStatus> ACTIVE = List.of(PENDING, IN_PREPARATION, READY);
 }

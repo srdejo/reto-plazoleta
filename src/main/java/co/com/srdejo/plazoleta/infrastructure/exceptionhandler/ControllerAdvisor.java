@@ -29,7 +29,10 @@ public class ControllerAdvisor {
             ErrorCodesEnum.OWNER_NOT_AUTHORIZED, HttpStatus.FORBIDDEN,
             ErrorCodesEnum.ACTIVE_ORDER_EXISTS, HttpStatus.CONFLICT,
             ErrorCodesEnum.MISSING_ORDER_DATA, HttpStatus.BAD_REQUEST,
-            ErrorCodesEnum.DISHES_DIFFERENT_RESTAURANT, HttpStatus.BAD_REQUEST
+            ErrorCodesEnum.DISHES_DIFFERENT_RESTAURANT, HttpStatus.BAD_REQUEST,
+            ErrorCodesEnum.INVALID_PIN_EXCEPTION, HttpStatus.FORBIDDEN,
+            ErrorCodesEnum.NOT_YET_READY_EXCEPTION, HttpStatus.FORBIDDEN,
+            ErrorCodesEnum.ORDER_CANNOT_BE_CANCELLED, HttpStatus.CONFLICT
     );
 
     @ExceptionHandler(NoDataFoundException.class)

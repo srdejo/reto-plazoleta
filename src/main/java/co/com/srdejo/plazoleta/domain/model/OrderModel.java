@@ -1,6 +1,7 @@
 package co.com.srdejo.plazoleta.domain.model;
 
 import co.com.srdejo.plazoleta.domain.exception.InvalidOrderPinException;
+import co.com.srdejo.plazoleta.domain.exception.OrderCannotBeCancelledException;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -58,5 +59,13 @@ public class OrderModel {
         }
 
         this.status = OrderStatus.DELIVERED;
+    }
+
+    public void cancelOrder() {
+        if (this.status != OrderStatus.PENDING) {
+            throw new OrderCannotBeCancelledException(ORDER_CANNOT_BE_CANCELLED);
+        }
+
+        this.status = OrderStatus.CANCELLED;
     }
 }

@@ -114,4 +114,21 @@ public class OrderRestController {
         orderHandler.markOrderAsDelivered(orderId, orderPinRequestDto.pin());
         return ResponseEntity.noContent().build();
     }
+
+    @Operation(
+            summary = "Cancel an order",
+            description = "Allows the authenticated customer to cancel an order that is still pending."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Order successfully cancelled", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Order not found", content = @Content),
+            @ApiResponse(responseCode = "409", description = "Order cannot be cancelled because it is not pending", content = @Content),
+            @ApiResponse(responseCode = "403", description = "User is not authorized to cancel orders", content = @Content)
+    })
+    @DeleteMapping("/{orderId}")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ResponseEntity<Void> cancelOrder(@PathVariable Long orderId) {
+        orderHandler.cancelOrder(orderId);
+        return ResponseEntity.noContent().build();
+    }
 }

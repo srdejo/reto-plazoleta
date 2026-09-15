@@ -14,15 +14,18 @@ public class FeignAuthorizationInterceptor implements RequestInterceptor {
 
     @Override
     public void apply(RequestTemplate template) {
-        HttpServletRequest currentRequest = currentRequest();
-        if (currentRequest == null) {
-            return;
-        }
-
-        String authorizationHeader = currentRequest.getHeader(AUTHORIZATION_HEADER);
+        String authorizationHeader = resolveAuthorizationHeader();
         if (authorizationHeader != null) {
             template.header(AUTHORIZATION_HEADER, authorizationHeader);
         }
+    }
+
+    private String resolveAuthorizationHeader() {
+        HttpServletRequest currentRequest = currentRequest();
+        if (currentRequest != null) {
+            return currentRequest.getHeader(AUTHORIZATION_HEADER);
+        }
+        return AsyncAuthorizationContext.get();
     }
 
     private HttpServletRequest currentRequest() {

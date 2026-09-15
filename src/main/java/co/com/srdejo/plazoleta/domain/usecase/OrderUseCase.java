@@ -4,13 +4,10 @@ import co.com.srdejo.plazoleta.domain.api.IOrderServicePort;
 import co.com.srdejo.plazoleta.domain.exception.ActiveOrderExistsException;
 import co.com.srdejo.plazoleta.domain.exception.ErrorCodesEnum;
 import co.com.srdejo.plazoleta.domain.exception.InvalidOrderException;
+import co.com.srdejo.plazoleta.domain.exception.UnauthorizedException;
 import co.com.srdejo.plazoleta.domain.model.OrderModel;
 import co.com.srdejo.plazoleta.domain.model.OrderStatus;
-import co.com.srdejo.plazoleta.domain.spi.IAuthenticatedUserPort;
-import co.com.srdejo.plazoleta.domain.spi.IDishPersistencePort;
-import co.com.srdejo.plazoleta.domain.spi.IEmployeeClientPort;
-import co.com.srdejo.plazoleta.domain.spi.INotificationPort;
-import co.com.srdejo.plazoleta.domain.spi.IOrderPersistencePort;
+import co.com.srdejo.plazoleta.domain.spi.*;
 import co.com.srdejo.plazoleta.domain.utils.PageRequest;
 import co.com.srdejo.plazoleta.domain.utils.PageResult;
 
@@ -24,19 +21,22 @@ public class OrderUseCase implements IOrderServicePort {
     private final IDishPersistencePort dishPersistencePort;
     private final IEmployeeClientPort employeeClientPort;
     private final INotificationPort notificationPort;
+    private final IOrderTraceabilityPort orderTraceabilityPort;
 
     public OrderUseCase(
             IOrderPersistencePort orderPersistencePort,
             IAuthenticatedUserPort authenticatedUserPort,
             IDishPersistencePort dishPersistencePort,
             IEmployeeClientPort employeeClientPort,
-            INotificationPort notificationPort
+            INotificationPort notificationPort,
+            IOrderTraceabilityPort orderTraceabilityPort
     ) {
         this.orderPersistencePort = orderPersistencePort;
         this.authenticatedUserPort = authenticatedUserPort;
         this.dishPersistencePort = dishPersistencePort;
         this.employeeClientPort = employeeClientPort;
         this.notificationPort = notificationPort;
+        this.orderTraceabilityPort = orderTraceabilityPort;
     }
 
     @Override
@@ -47,7 +47,7 @@ public class OrderUseCase implements IOrderServicePort {
         orderModel.setCustomerId(authenticatedUserId);
         orderModel.setOrderDate(LocalDateTime.now(ZoneId.of("America/Bogota")));
         orderModel.setStatus(OrderStatus.PENDING);
-        return orderPersistencePort.saveOrder(orderModel);
+        return saveOrderTraceability(orderModel, null);
     }
 
     @Override
@@ -60,31 +60,36 @@ public class OrderUseCase implements IOrderServicePort {
     public void takeOrder(Long orderId) {
         Long authenticatedUserId = authenticatedUserPort.getAuthenticatedUserId();
         OrderModel orderModel = orderPersistencePort.getOrder(orderId);
+        validateOrderBelongsToEmployeeRestaurant(orderModel);
+        OrderStatus previousStatus = orderModel.getStatus();
         orderModel.setChefId(authenticatedUserId);
         orderModel.setStatus(OrderStatus.IN_PREPARATION);
-        orderPersistencePort.saveOrder(orderModel);
+        saveOrderTraceability(orderModel, previousStatus);
     }
 
     @Override
     public void markOrderAsReady(Long orderId) {
         OrderModel orderModel = orderPersistencePort.getOrder(orderId);
+        OrderStatus previousStatus = orderModel.getStatus();
         orderModel.markAsReady();
-        orderPersistencePort.saveOrder(orderModel);
+        saveOrderTraceability(orderModel, previousStatus);
         notificationPort.notifyOrderReady(orderModel.getCustomerId(), orderId, orderModel.getPin());
     }
 
     @Override
     public void markOrderAsDelivered(Long orderId, String pin) {
         OrderModel orderModel = orderPersistencePort.getOrder(orderId);
+        OrderStatus previousStatus = orderModel.getStatus();
         orderModel.markAsDelivered(pin);
-        orderPersistencePort.saveOrder(orderModel);
+        saveOrderTraceability(orderModel, previousStatus);
     }
 
     @Override
     public void cancelOrder(Long orderId) {
         OrderModel orderModel = orderPersistencePort.getOrder(orderId);
+        OrderStatus previousStatus = orderModel.getStatus();
         orderModel.cancelOrder();
-        orderPersistencePort.saveOrder(orderModel);
+        saveOrderTraceability(orderModel, previousStatus);
     }
 
     private void canGetOtherOrders(Long customerId) {
@@ -94,6 +99,13 @@ public class OrderUseCase implements IOrderServicePort {
     }
 
 
+    private void validateOrderBelongsToEmployeeRestaurant(OrderModel orderModel) {
+        Long employeeRestaurantId = employeeClientPort.getAuthenticatedEmployeeRestaurantId();
+        if (!orderModel.getRestaurantId().equals(employeeRestaurantId)) {
+            throw new UnauthorizedException(ErrorCodesEnum.ORDER_DIFFERENT_RESTAURANT);
+        }
+    }
+
     private void validateItemsBelongToSameRestaurant(OrderModel orderModel) {
         boolean allItemsBelongToRestaurant = orderModel.getItems().stream()
                 .map(item -> dishPersistencePort.findById(item.getDishId()))
@@ -102,5 +114,21 @@ public class OrderUseCase implements IOrderServicePort {
         if (!allItemsBelongToRestaurant) {
             throw new InvalidOrderException(ErrorCodesEnum.DISHES_DIFFERENT_RESTAURANT);
         }
+    }
+
+    private OrderModel saveOrderTraceability(
+            OrderModel orderModel,
+            OrderStatus previousStatus
+    ) {
+        OrderModel savedOrderModel = orderPersistencePort.saveOrder(orderModel);
+
+        if (previousStatus != savedOrderModel.getStatus()) {
+            orderTraceabilityPort.trace(
+                    savedOrderModel,
+                    previousStatus
+            );
+        }
+
+        return savedOrderModel;
     }
 }

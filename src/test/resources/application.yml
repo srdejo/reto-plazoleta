@@ -19,6 +19,7 @@ feign-url:
   employees: ${feign-url.users}/users/employees
   customers: ${feign-url.users}/users
   mensajeria: http://localhost:8083/api/v1/notifications
+  traceability: http://localhost:8084/api/v1/traceability
 
 jwt:
   secret: una-clave-secreta-de-al-menos-32-bytes

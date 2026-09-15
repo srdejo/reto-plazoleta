@@ -6,15 +6,12 @@ import co.com.srdejo.plazoleta.domain.exception.InvalidOrderException;
 import co.com.srdejo.plazoleta.domain.exception.InvalidOrderPinException;
 import co.com.srdejo.plazoleta.domain.exception.NotYetReadyOrderException;
 import co.com.srdejo.plazoleta.domain.exception.OrderCannotBeCancelledException;
+import co.com.srdejo.plazoleta.domain.exception.UnauthorizedException;
 import co.com.srdejo.plazoleta.domain.model.DishModel;
 import co.com.srdejo.plazoleta.domain.model.OrderItemModel;
 import co.com.srdejo.plazoleta.domain.model.OrderModel;
 import co.com.srdejo.plazoleta.domain.model.OrderStatus;
-import co.com.srdejo.plazoleta.domain.spi.IAuthenticatedUserPort;
-import co.com.srdejo.plazoleta.domain.spi.IDishPersistencePort;
-import co.com.srdejo.plazoleta.domain.spi.IEmployeeClientPort;
-import co.com.srdejo.plazoleta.domain.spi.INotificationPort;
-import co.com.srdejo.plazoleta.domain.spi.IOrderPersistencePort;
+import co.com.srdejo.plazoleta.domain.spi.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -56,11 +53,15 @@ class OrderUseCaseTest {
     @Mock
     private INotificationPort notificationPort;
 
+    @Mock
+    private IOrderTraceabilityPort orderTraceabilityPort;
+
     private OrderUseCase orderUseCase;
 
     @BeforeEach
     void setUp() {
-        orderUseCase = new OrderUseCase(orderPersistencePort, authenticatedUserPort, dishPersistencePort, employeeClientPort, notificationPort);
+        orderUseCase = new OrderUseCase(orderPersistencePort, authenticatedUserPort, dishPersistencePort,
+                employeeClientPort, notificationPort, orderTraceabilityPort);
         lenient().when(authenticatedUserPort.getAuthenticatedUserId()).thenReturn(CUSTOMER_ID);
         lenient().when(orderPersistencePort.hasOrder(any(), anyList())).thenReturn(false);
     }
@@ -97,6 +98,34 @@ class OrderUseCaseTest {
         assertThat(order.getItems()).containsExactly(item);
         assertThat(item.getQuantity()).isEqualTo(3);
         verify(orderPersistencePort).saveOrder(order);
+    }
+
+    @Test
+    void saveOrder_validOrder_returnsPersistedOrderWithGeneratedId() {
+        OrderModel order = orderModel(List.of(new OrderItemModel(null, 1L, 2)));
+        OrderModel persistedOrder = orderModel(List.of(new OrderItemModel(null, 1L, 2)));
+        persistedOrder.setId(ORDER_ID);
+        persistedOrder.setStatus(OrderStatus.PENDING);
+        when(dishPersistencePort.findById(1L)).thenReturn(dishModel(1L, RESTAURANT_ID));
+        when(orderPersistencePort.saveOrder(order)).thenReturn(persistedOrder);
+
+        OrderModel result = orderUseCase.saveOrder(order);
+
+        assertThat(result.getId()).isEqualTo(ORDER_ID);
+    }
+
+    @Test
+    void saveOrder_validOrder_tracesPersistedOrderWithGeneratedId() {
+        OrderModel order = orderModel(List.of(new OrderItemModel(null, 1L, 2)));
+        OrderModel persistedOrder = orderModel(List.of(new OrderItemModel(null, 1L, 2)));
+        persistedOrder.setId(ORDER_ID);
+        persistedOrder.setStatus(OrderStatus.PENDING);
+        when(dishPersistencePort.findById(1L)).thenReturn(dishModel(1L, RESTAURANT_ID));
+        when(orderPersistencePort.saveOrder(order)).thenReturn(persistedOrder);
+
+        orderUseCase.saveOrder(order);
+
+        verify(orderTraceabilityPort).trace(persistedOrder, null);
     }
 
     @Test
@@ -139,6 +168,8 @@ class OrderUseCaseTest {
         order.setStatus(OrderStatus.PENDING);
         when(orderPersistencePort.getOrder(ORDER_ID)).thenReturn(order);
         when(authenticatedUserPort.getAuthenticatedUserId()).thenReturn(CHEF_ID);
+        when(employeeClientPort.getAuthenticatedEmployeeRestaurantId()).thenReturn(RESTAURANT_ID);
+        when(orderPersistencePort.saveOrder(order)).thenReturn(order);
 
         orderUseCase.takeOrder(ORDER_ID);
 
@@ -152,12 +183,28 @@ class OrderUseCaseTest {
         OrderModel order = orderModel(List.of(new OrderItemModel(null, 1L, 1)));
         when(orderPersistencePort.getOrder(ORDER_ID)).thenReturn(order);
         when(authenticatedUserPort.getAuthenticatedUserId()).thenReturn(CHEF_ID);
+        when(employeeClientPort.getAuthenticatedEmployeeRestaurantId()).thenReturn(RESTAURANT_ID);
+        when(orderPersistencePort.saveOrder(order)).thenReturn(order);
 
         orderUseCase.takeOrder(ORDER_ID);
 
         verify(orderPersistencePort).getOrder(ORDER_ID);
         verifyNoInteractions(dishPersistencePort);
-        verifyNoInteractions(employeeClientPort);
+    }
+
+    @Test
+    void takeOrder_orderBelongsToDifferentRestaurant_throwsUnauthorizedException() {
+        OrderModel order = orderModel(List.of(new OrderItemModel(null, 1L, 1)));
+        when(orderPersistencePort.getOrder(ORDER_ID)).thenReturn(order);
+        when(authenticatedUserPort.getAuthenticatedUserId()).thenReturn(CHEF_ID);
+        when(employeeClientPort.getAuthenticatedEmployeeRestaurantId()).thenReturn(RESTAURANT_ID + 1);
+
+        assertThatThrownBy(() -> orderUseCase.takeOrder(ORDER_ID))
+                .isInstanceOf(UnauthorizedException.class)
+                .satisfies(ex -> assertThat(((UnauthorizedException) ex).getError())
+                        .isEqualTo(ErrorCodesEnum.ORDER_DIFFERENT_RESTAURANT));
+
+        verify(orderPersistencePort, never()).saveOrder(any());
     }
 
     @Test
@@ -165,6 +212,7 @@ class OrderUseCaseTest {
         OrderModel order = orderModel(List.of(new OrderItemModel(null, 1L, 1)));
         order.setCustomerId(CUSTOMER_ID);
         when(orderPersistencePort.getOrder(ORDER_ID)).thenReturn(order);
+        when(orderPersistencePort.saveOrder(order)).thenReturn(order);
 
         orderUseCase.markOrderAsReady(ORDER_ID);
 
@@ -180,6 +228,7 @@ class OrderUseCaseTest {
         order.markAsReady();
         String correctPin = order.getPin();
         when(orderPersistencePort.getOrder(ORDER_ID)).thenReturn(order);
+        when(orderPersistencePort.saveOrder(order)).thenReturn(order);
 
         // when
         orderUseCase.markOrderAsDelivered(ORDER_ID, correctPin);
@@ -231,6 +280,7 @@ class OrderUseCaseTest {
         OrderModel order = orderModel(List.of(new OrderItemModel(null, 1L, 1)));
         order.setStatus(OrderStatus.PENDING);
         when(orderPersistencePort.getOrder(ORDER_ID)).thenReturn(order);
+        when(orderPersistencePort.saveOrder(order)).thenReturn(order);
 
         // when
         orderUseCase.cancelOrder(ORDER_ID);

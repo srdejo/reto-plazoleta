@@ -19,7 +19,8 @@ public enum ErrorCodesEnum {
     EMPLOYEE_NOT_FOUND("ERR06", "El empleado autenticado no existe o no tiene un restaurante asignado"),
     NOT_YET_READY_EXCEPTION("ERR07", "El pedido aun no esta listo para marcarse como entregado"),
     INVALID_PIN_EXCEPTION("ERR08", "El pin es incorrecto"),
-    ORDER_CANNOT_BE_CANCELLED("ERR09","Lo sentimos, tu pedido ya está en preparación y no puede cancelarse");
+    ORDER_CANNOT_BE_CANCELLED("ERR09","Lo sentimos, tu pedido ya está en preparación y no puede cancelarse"),
+    ORDER_DIFFERENT_RESTAURANT("AUTH4", "El pedido no pertenece al restaurante del empleado autenticado");
 
     private final String code;
     private final String description;

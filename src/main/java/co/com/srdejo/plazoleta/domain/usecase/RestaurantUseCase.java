@@ -20,11 +20,11 @@ public class RestaurantUseCase implements IRestaurantServicePort {
     }
 
     @Override
-    public void saveRestaurant(RestaurantModel restaurantModel) {
+    public RestaurantModel saveRestaurant(RestaurantModel restaurantModel) {
         if (!ownerClientPort.existsOwner(restaurantModel.getOwnerId())){
             throw new InvalidOwnerException(ErrorCodesEnum.INVALID_OWNER_ID);
         }
-        restaurantPersistencePort.saveRestaurant(restaurantModel);
+        return restaurantPersistencePort.saveRestaurant(restaurantModel);
     }
 
     @Override

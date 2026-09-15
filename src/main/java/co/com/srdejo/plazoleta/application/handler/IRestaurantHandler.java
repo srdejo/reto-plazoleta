@@ -7,7 +7,7 @@ import co.com.srdejo.plazoleta.application.dto.response.RestaurantResponseDto;
 
 public interface IRestaurantHandler {
 
-    void saveRestaurant(RestaurantRequestDto restaurantRequestDto);
+    RestaurantResponseDto saveRestaurant(RestaurantRequestDto restaurantRequestDto);
 
     PageResponseDto<RestaurantNameAndLogoResponseDto> getAllRestaurants(int page, int size, boolean ascending);
 

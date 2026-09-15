@@ -6,6 +6,7 @@ import co.com.srdejo.plazoleta.infrastructure.exception.NoDataFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -44,6 +45,11 @@ public class ControllerAdvisor {
     @ExceptionHandler(DomainException.class)
     public ResponseEntity<Map<String, Object>> handleDomainException(DomainException exception) {
         return buildResponse(exception.getError());
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Map<String, Object>> handleAccessDeniedException(AccessDeniedException ignoredException) {
+        return buildResponse(HttpStatus.FORBIDDEN, ErrorCodesEnum.FORBIDDEN_ROLE.getCode(), ErrorCodesEnum.FORBIDDEN_ROLE.getDescription());
     }
 
     @ExceptionHandler(feign.RetryableException.class)

@@ -6,7 +6,7 @@ import co.com.srdejo.plazoleta.domain.model.RestaurantModel;
 
 public interface IRestaurantServicePort {
 
-    void saveRestaurant(RestaurantModel objectModel);
+    RestaurantModel saveRestaurant(RestaurantModel objectModel);
 
     PageResult<RestaurantModel> getAllRestaurants(PageRequest pageRequest);
 

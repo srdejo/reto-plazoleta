@@ -11,11 +11,9 @@ import co.com.srdejo.plazoleta.domain.usecase.OrderUseCase;
 import co.com.srdejo.plazoleta.domain.usecase.RestaurantUseCase;
 import co.com.srdejo.plazoleta.infrastructure.out.feign.adapter.EmployeeClientAdapter;
 import co.com.srdejo.plazoleta.infrastructure.out.feign.adapter.NotificationClientAdapter;
+import co.com.srdejo.plazoleta.infrastructure.out.feign.adapter.OrderTraceabilityAdapter;
 import co.com.srdejo.plazoleta.infrastructure.out.feign.adapter.OwnerClientAdapter;
-import co.com.srdejo.plazoleta.infrastructure.out.feign.client.EmployeeClient;
-import co.com.srdejo.plazoleta.infrastructure.out.feign.client.NotificationClient;
-import co.com.srdejo.plazoleta.infrastructure.out.feign.client.OwnerClient;
-import co.com.srdejo.plazoleta.infrastructure.out.feign.client.UserClient;
+import co.com.srdejo.plazoleta.infrastructure.out.feign.client.*;
 import co.com.srdejo.plazoleta.infrastructure.out.jpa.adapter.DishCategoryJpaAdapter;
 import co.com.srdejo.plazoleta.infrastructure.out.jpa.adapter.DishJpaAdapter;
 import co.com.srdejo.plazoleta.infrastructure.out.jpa.adapter.OrderJpaAdapter;
@@ -48,6 +46,7 @@ public class BeanConfiguration {
     private final NotificationClient notificationClient;
     private final IOrderRepository orderRepository;
     private final IOrderEntityMapper  orderEntityMapper;
+    private final TraceabilityClient traceabilityClient;
 
     @Bean
     public IRestaurantPersistencePort restaurantPersistencePort() {
@@ -105,7 +104,12 @@ public class BeanConfiguration {
     }
 
     @Bean
+    public IOrderTraceabilityPort orderTraceabilityPort() {
+        return new OrderTraceabilityAdapter(traceabilityClient, userClient);
+    }
+
+    @Bean
     public IOrderServicePort orderServicePort() {
-        return new OrderUseCase(orderPersistencePort(), authenticatedUserPort(), dishPersistencePort(), employeeClientPort(), notificationPort());
+        return new OrderUseCase(orderPersistencePort(), authenticatedUserPort(), dishPersistencePort(), employeeClientPort(), notificationPort(), orderTraceabilityPort());
     }
 }

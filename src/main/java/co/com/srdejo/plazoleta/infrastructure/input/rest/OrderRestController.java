@@ -42,8 +42,7 @@ public class OrderRestController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "All orders returned",
                     content = @Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = DishResponseDto.class)))),
-            @ApiResponse(responseCode = "404", description = "No data found", content = @Content)
+                            array = @ArraySchema(schema = @Schema(implementation = DishResponseDto.class))))
     })
     @PreAuthorize("hasRole('EMPLOYEE')")
     @GetMapping()

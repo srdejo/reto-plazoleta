@@ -43,9 +43,6 @@ public class OrderJpaAdapter implements IOrderPersistencePort {
         Page<OrderEntity> entityPage = orderStatus == null
                 ? orderRepository.findAllByRestaurantId(restaurantId, pageable)
                 : orderRepository.findAllByRestaurantIdAndStatus(restaurantId, orderStatus, pageable);
-        if (entityPage.isEmpty()) {
-            throw new NoDataFoundException();
-        }
 
         return new PageResult<>(
                 orderEntityMapper.toOrderModelList(entityPage.getContent()),

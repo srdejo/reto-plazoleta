@@ -38,7 +38,15 @@ public class OrderTraceabilityAdapter implements IOrderTraceabilityPort {
                 employeeEmail
         );
 
-        traceabilityClient.registerStatusChange(orderRequestDto);
+        try {
+            traceabilityClient.registerStatusChange(orderRequestDto);
+            log.info("Traceability event sent for order {} ({} -> {})",
+                    orderModel.getId(), previousStatus, orderModel.getStatus());
+        } catch (FeignException ex) {
+            log.error("Failed to send traceability event for order {} ({} -> {})",
+                    orderModel.getId(), previousStatus, orderModel.getStatus(), ex);
+            throw ex;
+        }
     }
 
     private String getEmailSafely(Long userId) {

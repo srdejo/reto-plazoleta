@@ -10,12 +10,14 @@ import co.com.srdejo.plazoleta.infrastructure.out.jpa.entity.OrderEntity;
 import co.com.srdejo.plazoleta.infrastructure.out.jpa.mapper.IOrderEntityMapper;
 import co.com.srdejo.plazoleta.infrastructure.out.jpa.repository.IOrderRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
 import java.util.List;
 
+@Slf4j
 @RequiredArgsConstructor
 public class OrderJpaAdapter implements IOrderPersistencePort {
 
@@ -27,6 +29,7 @@ public class OrderJpaAdapter implements IOrderPersistencePort {
         OrderEntity orderEntity = orderEntityMapper.toEntity(orderModel);
         orderEntity.getItems().forEach(item -> item.setOrder(orderEntity));
         OrderEntity orderEntitySaved = orderRepository.save(orderEntity);
+        log.debug("Persisted order {} with status {}", orderEntitySaved.getId(), orderEntitySaved.getStatus());
         return orderEntityMapper.toOrderModel(orderEntitySaved);
     }
 
@@ -54,7 +57,11 @@ public class OrderJpaAdapter implements IOrderPersistencePort {
 
     @Override
     public OrderModel getOrder(Long orderId) {
-        OrderEntity orderEntity = orderRepository.findById(orderId).orElseThrow(NoDataFoundException::new);
+        OrderEntity orderEntity = orderRepository.findById(orderId)
+                .orElseThrow(() -> {
+                    log.warn("Order {} not found", orderId);
+                    return new NoDataFoundException();
+                });
         return orderEntityMapper.toOrderModel(orderEntity);
     }
 

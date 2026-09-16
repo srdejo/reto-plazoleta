@@ -2,12 +2,12 @@ package co.com.srdejo.plazoleta.domain.model;
 
 import co.com.srdejo.plazoleta.domain.exception.InvalidOrderPinException;
 import co.com.srdejo.plazoleta.domain.exception.OrderCannotBeCancelledException;
+import co.com.srdejo.plazoleta.domain.utils.DomainConstants;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
@@ -39,7 +39,7 @@ public class OrderModel {
         this.customerId = customerId;
         this.restaurantId = restaurantId;
         this.chefId = chefId;
-        this.orderDate = LocalDateTime.now(ZoneId.of("America/Bogota"));
+        this.orderDate = LocalDateTime.now(DomainConstants.APPLICATION_ZONE_ID);
         this.status = OrderStatus.PENDING;
         this.items = items;
     }

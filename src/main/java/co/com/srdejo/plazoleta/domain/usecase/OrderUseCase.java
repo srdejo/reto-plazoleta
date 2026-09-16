@@ -8,12 +8,14 @@ import co.com.srdejo.plazoleta.domain.exception.UnauthorizedException;
 import co.com.srdejo.plazoleta.domain.model.OrderModel;
 import co.com.srdejo.plazoleta.domain.model.OrderStatus;
 import co.com.srdejo.plazoleta.domain.spi.*;
+import co.com.srdejo.plazoleta.domain.utils.DomainConstants;
 import co.com.srdejo.plazoleta.domain.utils.PageRequest;
 import co.com.srdejo.plazoleta.domain.utils.PageResult;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 
+@Slf4j
 public class OrderUseCase implements IOrderServicePort {
 
     private final IOrderPersistencePort orderPersistencePort;
@@ -45,9 +47,12 @@ public class OrderUseCase implements IOrderServicePort {
         canGetOtherOrders(authenticatedUserId);
         validateItemsBelongToSameRestaurant(orderModel);
         orderModel.setCustomerId(authenticatedUserId);
-        orderModel.setOrderDate(LocalDateTime.now(ZoneId.of("America/Bogota")));
+        orderModel.setOrderDate(LocalDateTime.now(DomainConstants.APPLICATION_ZONE_ID));
         orderModel.setStatus(OrderStatus.PENDING);
-        return saveOrderTraceability(orderModel, null);
+        OrderModel savedOrder = saveOrderTraceability(orderModel, null);
+        log.info("Order {} created by customer {} for restaurant {}",
+                savedOrder.getId(), authenticatedUserId, orderModel.getRestaurantId());
+        return savedOrder;
     }
 
     @Override
@@ -65,6 +70,7 @@ public class OrderUseCase implements IOrderServicePort {
         orderModel.setChefId(authenticatedUserId);
         orderModel.setStatus(OrderStatus.IN_PREPARATION);
         saveOrderTraceability(orderModel, previousStatus);
+        log.info("Order {} taken by employee {} ({} -> {})", orderId, authenticatedUserId, previousStatus, orderModel.getStatus());
     }
 
     @Override
@@ -73,6 +79,7 @@ public class OrderUseCase implements IOrderServicePort {
         OrderStatus previousStatus = orderModel.getStatus();
         orderModel.markAsReady();
         saveOrderTraceability(orderModel, previousStatus);
+        log.info("Order {} marked as ready ({} -> {})", orderId, previousStatus, orderModel.getStatus());
         notificationPort.notifyOrderReady(orderModel.getCustomerId(), orderId, orderModel.getPin());
     }
 
@@ -82,6 +89,7 @@ public class OrderUseCase implements IOrderServicePort {
         OrderStatus previousStatus = orderModel.getStatus();
         orderModel.markAsDelivered(pin);
         saveOrderTraceability(orderModel, previousStatus);
+        log.info("Order {} marked as delivered ({} -> {})", orderId, previousStatus, orderModel.getStatus());
     }
 
     @Override
@@ -90,10 +98,12 @@ public class OrderUseCase implements IOrderServicePort {
         OrderStatus previousStatus = orderModel.getStatus();
         orderModel.cancelOrder();
         saveOrderTraceability(orderModel, previousStatus);
+        log.info("Order {} cancelled ({} -> {})", orderId, previousStatus, orderModel.getStatus());
     }
 
     private void canGetOtherOrders(Long customerId) {
         if ( orderPersistencePort.hasOrder(customerId, OrderStatus.ACTIVE.stream().toList()) ) {
+            log.warn("Customer {} attempted to create an order while already having an active one", customerId);
             throw new ActiveOrderExistsException(ErrorCodesEnum.ACTIVE_ORDER_EXISTS);
         }
     }
@@ -102,6 +112,8 @@ public class OrderUseCase implements IOrderServicePort {
     private void validateOrderBelongsToEmployeeRestaurant(OrderModel orderModel) {
         Long employeeRestaurantId = employeeClientPort.getAuthenticatedEmployeeRestaurantId();
         if (!orderModel.getRestaurantId().equals(employeeRestaurantId)) {
+            log.warn("Employee's restaurant {} does not match order {} restaurant {}",
+                    employeeRestaurantId, orderModel.getId(), orderModel.getRestaurantId());
             throw new UnauthorizedException(ErrorCodesEnum.ORDER_DIFFERENT_RESTAURANT);
         }
     }
@@ -112,6 +124,7 @@ public class OrderUseCase implements IOrderServicePort {
                 .allMatch(dish -> dish.getRestaurantId().equals(orderModel.getRestaurantId()));
 
         if (!allItemsBelongToRestaurant) {
+            log.warn("Order for restaurant {} contains dishes from a different restaurant", orderModel.getRestaurantId());
             throw new InvalidOrderException(ErrorCodesEnum.DISHES_DIFFERENT_RESTAURANT);
         }
     }
@@ -123,6 +136,8 @@ public class OrderUseCase implements IOrderServicePort {
         OrderModel savedOrderModel = orderPersistencePort.saveOrder(orderModel);
 
         if (previousStatus != savedOrderModel.getStatus()) {
+            log.debug("Order {} status changed {} -> {}, sending traceability event",
+                    savedOrderModel.getId(), previousStatus, savedOrderModel.getStatus());
             orderTraceabilityPort.trace(
                     savedOrderModel,
                     previousStatus
